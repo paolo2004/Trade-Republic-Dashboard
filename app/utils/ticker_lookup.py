@@ -69,9 +69,7 @@ def get_ticker_from_isin(isin):
     if not isin:
         return None
 
-    headers = {
-        "Content-Type": "application/json"
-    }
+    headers = {"Content-Type": "application/json"}
 
     payload = [
         {
@@ -102,7 +100,7 @@ def get_ticker_from_isin(isin):
             if ticker and exch_code:
                 candidates.append({"ticker": ticker, "exchCode": exch_code})
 
-        #st.write(candidates)
+        # st.write(candidates)
 
         if not candidates:
             return None
@@ -121,6 +119,7 @@ def get_ticker_from_isin(isin):
         return None
     except Exception:
         return None
+
 
 def get_crypto_ticker(row):
     asset_class = str(row.get("asset_class", "")).strip().upper()

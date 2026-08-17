@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
-from utils.ticker_lookup import get_ticker_from_isin, get_crypto_ticker
+from utils.ticker_lookup import get_crypto_ticker, get_ticker_from_isin
+
 
 def load_data(uploaded_file):
     file_name = uploaded_file.name.lower()
@@ -50,15 +51,11 @@ def load_data(uploaded_file):
         unique_isins = df.loc[~is_crypto, "symbol"].dropna().unique()
 
         with st.spinner("Looking up ticker symbols..."):
-            isin_map = {
-                isin: get_ticker_from_isin(isin)
-                for isin in unique_isins
-            }
+            isin_map = {isin: get_ticker_from_isin(isin) for isin in unique_isins}
 
-        df.loc[~is_crypto, "ticker"] = (
-            df.loc[~is_crypto, "symbol"].map(isin_map)
-        )
+        df.loc[~is_crypto, "ticker"] = df.loc[~is_crypto, "symbol"].map(isin_map)
     return df
+
 
 def validate_data(df):
     required_columns = ["date", "type", "name", "shares", "amount", "currency"]
@@ -74,10 +71,11 @@ def validate_data(df):
     # Check for valid date format
     try:
         pd.to_datetime(df["date"])
-    except Exception:
-        raise ValueError("Invalid date format in the 'date' column.")
+    except Exception as error:
+        raise ValueError("Invalid date format in the 'date' column.") from error
 
     return True
+
 
 def check_if_data_loaded():
     if "df" not in st.session_state:

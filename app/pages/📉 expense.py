@@ -1,4 +1,3 @@
-import pandas as pd
 import plotly.express as px
 import streamlit as st
 from utils.import_data import check_if_data_loaded, validate_data
@@ -52,5 +51,10 @@ with col2:
     st.plotly_chart(fig)
 
 st.subheader("Detailed Expenses Data")
-columns_to_display = ["date", "name", "amount", "currency", ]
+columns_to_display = [
+    "date",
+    "name",
+    "amount",
+    "currency",
+]
 st.dataframe(expenses[columns_to_display])

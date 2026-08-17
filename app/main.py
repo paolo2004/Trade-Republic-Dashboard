@@ -1,8 +1,7 @@
+
 import streamlit as st
 from PIL import Image
 from utils.import_data import load_data
-import pandas as pd
-import datetime
 
 st.set_page_config(page_title="Portfolio Dashboard", page_icon=":bar_chart:", layout="wide")
 image = Image.open("assets/logo.webp")
@@ -43,7 +42,7 @@ if uploaded_file is not None:
         st.error(str(error))
     except Exception:
         st.error("Could not load the uploaded file.")
-        
+
 if "df" in st.session_state:
     df = st.session_state["df"]
     st.dataframe(df)

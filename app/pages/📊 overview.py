@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-
 from utils.import_data import check_if_data_loaded, validate_data
 from utils.metrics import calculate_positions, get_current_prices
 
@@ -58,19 +57,12 @@ if portfolio_by_asset.empty:
     st.info("There are no open positions after accounting for sell orders.")
     st.stop()
 
-tickers = tuple(
-    portfolio_by_asset["ticker"]
-    .dropna()
-    .loc[lambda values: values != ""]
-    .unique()
-)
+tickers = tuple(portfolio_by_asset["ticker"].dropna().loc[lambda values: values != ""].unique())
 
 with st.spinner("Fetching current market prices..."):
     current_prices = get_current_prices(tickers)
 
-portfolio_by_asset["current_price"] = portfolio_by_asset["ticker"].map(
-    current_prices
-)
+portfolio_by_asset["current_price"] = portfolio_by_asset["ticker"].map(current_prices)
 portfolio_by_asset["market_value"] = (
     portfolio_by_asset["open_shares"] * portfolio_by_asset["current_price"]
 )
@@ -79,19 +71,15 @@ portfolio_by_asset["unrealised_profit_loss"] = (
 )
 portfolio_by_asset["unrealised_return_pct"] = np.where(
     portfolio_by_asset["open_cost_basis"] > 0,
-    portfolio_by_asset["unrealised_profit_loss"]
-    / portfolio_by_asset["open_cost_basis"]
-    * 100,
+    portfolio_by_asset["unrealised_profit_loss"] / portfolio_by_asset["open_cost_basis"] * 100,
     np.nan,
 )
 
 # Amount is the gross payment in the Trade Republic export; fees and taxes are
 # negative values, so adding them produces the net received income.
-income_transactions = period_df[ period_df["type"].isin(["DIVIDEND", "INTEREST_PAYMENT"])].copy()
+income_transactions = period_df[period_df["type"].isin(["DIVIDEND", "INTEREST_PAYMENT"])].copy()
 income_transactions["net_income"] = (
-    income_transactions["amount"]
-    + income_transactions["fee"]
-    + income_transactions["tax"]
+    income_transactions["amount"] + income_transactions["fee"] + income_transactions["tax"]
 )
 
 net_dividends = income_transactions.loc[
@@ -101,18 +89,16 @@ net_interest = income_transactions.loc[
     income_transactions["type"] == "INTEREST_PAYMENT", "net_income"
 ].sum()
 
-period_income = net_dividends + net_interest 
+period_income = net_dividends + net_interest
 
 st.write(period_df)
 portfolio_value = portfolio_by_asset["market_value"].sum(min_count=1)
 open_cost_basis = portfolio_by_asset["open_cost_basis"].sum()
-unrealised_profit_loss = portfolio_by_asset["unrealised_profit_loss"].sum( min_count=1)
+unrealised_profit_loss = portfolio_by_asset["unrealised_profit_loss"].sum(min_count=1)
 realised_profit_loss = portfolio_by_asset["realised_profit_loss"].sum()
 total_profit_loss = unrealised_profit_loss + realised_profit_loss + period_income
 cash_value = df[["amount", "fee", "tax"]].sum().sum()
-total_return_pct = (
-    total_profit_loss / open_cost_basis * 100 if open_cost_basis > 0 else np.nan
-)
+total_return_pct = total_profit_loss / open_cost_basis * 100 if open_cost_basis > 0 else np.nan
 
 # Portfolio summary
 col1, col2, col3, col4, col5 = st.columns(5)
@@ -120,9 +106,7 @@ col1.metric("Portfolio value", f"€{portfolio_value:,.2f}")
 col2.metric(
     "Unrealised P/L",
     f"€{unrealised_profit_loss:,.2f}",
-    f"{unrealised_profit_loss / open_cost_basis * 100:.2f}%"
-    if open_cost_basis > 0
-    else None,
+    f"{unrealised_profit_loss / open_cost_basis * 100:.2f}%" if open_cost_basis > 0 else None,
 )
 col3.metric("Realised P/L", f"€{realised_profit_loss:,.2f}")
 col4.metric(
@@ -132,7 +116,6 @@ col4.metric(
 )
 col5.metric("Cash", f"€{cash_value:,.2f}")
 # col5.metric("Period Income", f"€{period_income:,.2f}")
-
 
 
 # Open positions table
@@ -151,9 +134,7 @@ display_columns = [
     "realised_profit_loss",
 ]
 
-position_table = portfolio_by_asset[display_columns].sort_values(
-    "market_value", ascending=False
-)
+position_table = portfolio_by_asset[display_columns].sort_values("market_value", ascending=False)
 
 st.dataframe(
     position_table,
@@ -163,25 +144,15 @@ st.dataframe(
         "name": "Asset",
         "asset_class": "Asset class",
         "open_shares": st.column_config.NumberColumn("Open shares", format="%.2f"),
-        "avg_cost_per_share": st.column_config.NumberColumn(
-            "Average cost/share", format="€%.2f"
-        ),
-        "current_price": st.column_config.NumberColumn(
-            "Current price", format="€%.2f"
-        ),
-        "open_cost_basis": st.column_config.NumberColumn(
-            "Open cost basis", format="€%.2f"
-        ),
+        "avg_cost_per_share": st.column_config.NumberColumn("Average cost/share", format="€%.2f"),
+        "current_price": st.column_config.NumberColumn("Current price", format="€%.2f"),
+        "open_cost_basis": st.column_config.NumberColumn("Open cost basis", format="€%.2f"),
         "market_value": st.column_config.NumberColumn("Market value", format="€%.2f"),
-        "unrealised_profit_loss": st.column_config.NumberColumn(
-            "Unrealised P/L", format="€%.2f"
-        ),
+        "unrealised_profit_loss": st.column_config.NumberColumn("Unrealised P/L", format="€%.2f"),
         "unrealised_return_pct": st.column_config.NumberColumn(
             "Unrealised return", format="%.2f%%"
         ),
-        "realised_profit_loss": st.column_config.NumberColumn(
-            "Realised P/L", format="€%.2f"
-        ),
+        "realised_profit_loss": st.column_config.NumberColumn("Realised P/L", format="€%.2f"),
     },
 )
 
@@ -200,8 +171,7 @@ with left_column:
 
     pnl_by_asset = portfolio_by_asset.copy()
     pnl_by_asset["total_profit_loss"] = (
-        pnl_by_asset["unrealised_profit_loss"]
-        + pnl_by_asset["realised_profit_loss"]
+        pnl_by_asset["unrealised_profit_loss"] + pnl_by_asset["realised_profit_loss"]
     )
 
     pnl_by_asset = pnl_by_asset.sort_values("total_profit_loss")
@@ -219,22 +189,20 @@ with left_column:
         },
     )
 
-    figure.update_traces(
-             hovertemplate="%{y}<br>total_profit_loss: €%{x:,.2f}<extra></extra>"
-    )
+    figure.update_traces(hovertemplate="%{y}<br>total_profit_loss: €%{x:,.2f}<extra></extra>")
 
     figure.update_xaxes(
         tickprefix="€",
         tickformat=",.2f",
     )
-    
+
     st.plotly_chart(figure, use_container_width=True)
 
 with right_column:
     st.subheader("Unrealised profit/loss by asset")
-    performance = portfolio_by_asset.dropna(
-        subset=["unrealised_profit_loss"]
-    ).sort_values("unrealised_profit_loss")
+    performance = portfolio_by_asset.dropna(subset=["unrealised_profit_loss"]).sort_values(
+        "unrealised_profit_loss"
+    )
 
     figure = px.bar(
         performance,
@@ -246,9 +214,7 @@ with right_column:
         labels={"unrealised_profit_loss": "Unrealised P/L (€)", "name": ""},
     )
 
-    figure.update_traces(
-         hovertemplate="%{y}<br>Unrealised P/L: €%{x:,.2f}<extra></extra>"
-    )
+    figure.update_traces(hovertemplate="%{y}<br>Unrealised P/L: €%{x:,.2f}<extra></extra>")
 
     figure.update_xaxes(
         tickprefix="€",
@@ -268,9 +234,7 @@ with chart_left:
         investment_flow["amount"] + investment_flow["fee"] + investment_flow["tax"]
     )
     investment_flow["month"] = investment_flow["date"].dt.to_period("M").astype(str)
-    monthly_cash_flow = (
-        investment_flow.groupby("month", as_index=False)["net_cash_flow"].sum()
-    )
+    monthly_cash_flow = investment_flow.groupby("month", as_index=False)["net_cash_flow"].sum()
 
     figure = px.bar(
         monthly_cash_flow,
@@ -289,9 +253,9 @@ with chart_right:
     if passive_income.empty:
         st.info("No dividends or interest payments in the selected period.")
     else:
-        monthly_income = passive_income.groupby(
-            ["month", "type"], as_index=False
-        )["net_income"].sum()
+        monthly_income = passive_income.groupby(["month", "type"], as_index=False)[
+            "net_income"
+        ].sum()
 
         figure = px.bar(
             monthly_income,
