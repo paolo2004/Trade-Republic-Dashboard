@@ -1,97 +1,98 @@
 # Trade-Republic-Dashboard
 
-Ein lokales Finanz-Dashboard, das Trade-Republic-Daten importiert, analysiert und uebersichtlich visualisiert.
+A local finance dashboard that imports, analyzes, and clearly visualizes Trade Republic data.
 
-## Ziel und Anforderungen
+## Goal and Requirements
 
-Ziel des Projekts ist ein lokal laufendes Dashboard zur Auswertung eigener Finanzdaten aus Trade Republic. Der Fokus liegt auf einem sicheren, nachvollziehbaren Import von Export-Dateien und einer klaren Darstellung von Portfolio, Transaktionen und Auswertungen.
+The goal of the project is a locally running dashboard for evaluating personal financial data from Trade Republic. The focus is on secure, traceable importing of export files and clear presentation of portfolio, transactions, and analyses.
 
-### Funktionale Anforderungen
+### Functional Requirements
 
-- Benutzer koennen lokale Trade-Republic-Exportdateien hochladen (CSV und Excel).
-- Die App validiert die importierten Daten und zeigt bei Fehlern klare Meldungen an.
-- Die App zeigt Portfolio-Übersichten, Transaktionslisten, Dividenden, Allokation und Kennzahlen an.
-- Die App berechnet und zeigt Gesamtkosten, Gebühren, Datumsspanne und Währungen der Daten an.
-- Die Visualisierung erfolgt lokal in Streamlit ohne externe Dienste.
-- Erweiterungen wie neue Importformate oder zusätzliche Auswertungen sollen einfach hinzufuegbar sein.
+- Users can upload local Trade Republic export files (CSV and Excel).
+- The app validates imported data and displays clear error messages.
+- The app displays portfolio overviews, transaction lists, dividends, allocation, and metrics.
+- The app calculates and displays total costs, fees, date range, and currencies of the data.
+- Visualization occurs locally in Streamlit without external services.
+- Extensions such as new import formats or additional analyses should be easy to add.
 
-### Nicht im Scope
+### Out of Scope
 
-- Keine Trade-Republic-Login-Automatisierung oder Speicherung von Zugangsdaten.
-- Kein Zugriff auf inoffizielle APIs oder automatische Depotabfrage.
-- Keine Währungsumrechnung mit externen Wechselkursen oder wechselkursbasierten Fremddaten.
-- Keine Nutzungstracking- oder Telemetrie-Features ausserhalb der direkten Dashboard-Funktionalitaet.
+- No Trade Republic login automation or storage of access credentials.
+- No access to unofficial APIs or automatic portfolio queries.
+- No currency conversion with external exchange rates or exchange rate-based third-party data.
+- No usage tracking or telemetry features outside of direct dashboard functionality.
 
-## Datenquelle
+## Data Source
 
-Als Datenquelle sollen zunaechst lokale Export-Dateien verwendet werden:
+Local export files should initially be used as the data source:
 
-- CSV-Export von Trade Republic
-- Excel-Export von Trade Republic, falls verfuegbar
+- CSV export from Trade Republic
+- Excel export from Trade Republic, if available
 
-Nicht Teil des ersten Scopes sind:
+Not part of the initial scope are:
 
-- Login-Scraping
-- inoffizielle APIs
-- Speicherung von Zugangsdaten
-- automatischer Zugriff auf das Depot
+- Login scraping
+- Unofficial APIs
+- Storage of access credentials
+- Automatic access to the portfolio
 
-Dieser Ansatz reduziert Security-Risiken und vermeidet den Umgang mit sensiblen Login-Daten.
+This approach reduces security risks and avoids handling sensitive login data.
 
-## Bedrohungsmodell
+## Threat Model
 
-| Frage                        | Antwort                                                                    |
-| ---------------------------- | -------------------------------------------------------------------------- |
-| Welche Daten sind sensibel?  | Depotwerte, Transaktionen, IBAN, Name und weitere persoenliche Finanzdaten |
-| Wer koennte angreifen?       | Malware, fremde Nutzer am Laptop oder versehentliche GitHub-Leaks          |
-| Was darf nie passieren?      | Finanzdaten oder Zugangsdaten landen auf GitHub                            |
-| Wo werden Daten gespeichert? | Lokal auf dem eigenen Rechner                                              |
-| Wer hat Zugriff?             | Nur der lokale Nutzer                                                      |
+| Question                | Answer                                                                 |
+| ----------------------- | ---------------------------------------------------------------------- |
+| What data is sensitive? | Securities, transactions, IBAN, name and other personal financial data |
+| Who could attack?       | Malware, other users on the laptop, or accidental GitHub leaks         |
+| What must never happen? | Financial data or access credentials end up on GitHub                  |
+| Where are data stored?  | Locally on your own computer                                           |
+| Who has access?         | Only the local user                                                    |
 
-## Architektur
+## Architecture
 
 ```text
 Trade Republic CSV/Excel
         |
         v
-Import-Modul
+Import Module
         |
         v
-Datenvalidierung
+Data Validation
         |
         v
-Pandas DataFrame / lokale Speicherung
+Pandas DataFrame / local storage
         |
         v
-Analyse-Modul
+Analysis Module
         |
         v
 Streamlit Dashboard
 ```
 
-## Geplanter Tech-Stack
+## Planned Tech Stack
 
 - Python
-- Pandas fuer Datenaufbereitung und Analyse
-- Streamlit fuer das lokale Dashboard
-- Lokale CSV-/Excel-Dateien als Importquelle
-- Optional: SQLite fuer lokale Zwischenspeicherung
+- Pandas for data processing and analysis
+- Streamlit for the local dashboard
+- Yfinance for financial data
+- Local CSV/Excel files as import source
+- Optional: SQLite for local caching
 
 ## CI/CD
 
-Das Repository ist fuer GitHub Actions vorbereitet. Die CI-Pipeline laeuft bei Pushes und Pull Requests gegen `main` oder `master` und prueft:
+The repository is prepared for GitHub Actions. The CI pipeline runs on pushes and pull requests against `main` or `master` and checks:
 
-- Installation der Python-Abhaengigkeiten
-- Code-Formatierung mit Ruff
-- Linting mit Ruff
-- Tests mit Pytest
-- Security-Scan des `app`-Ordners mit Bandit
+- Installation of Python dependencies
+- Code formatting with Ruff
+- Linting with Ruff
+- Tests with Pytest
+- Security scan of the `app` folder with Bandit
 
-Die Pipeline liegt unter `.github/workflows/ci.yml`.
+The pipeline is located at `.github/workflows/ci.yml`.
 
-Ein echtes Deployment ist noch nicht aktiviert, weil das Projekt aktuell als lokales Dashboard geplant ist. Sobald ein Ziel feststeht, kann eine CD-Stufe ergaenzt werden, zum Beispiel fuer Streamlit Cloud, einen eigenen Server oder ein Docker-basiertes Deployment.
+A real deployment is not yet activated because the project is currently planned as a local dashboard. Once a goal is set, a CD stage can be added, for example for Streamlit Cloud, your own server, or Docker-based deployment.
 
-## Lokale Entwicklung
+## Local Development
 
 ```powershell
 python -m venv .venv
@@ -103,6 +104,6 @@ ruff format .
 bandit -r app
 ```
 
-## Projektstatus
+## Project Status
 
-Das Projekt befindet sich in der fruehen Planungs- und Aufbauphase. Der erste sichere Meilenstein ist ein lokaler CSV-/Excel-Import mit validierten Beispieldaten und einer einfachen Streamlit-Ansicht.
+The project is in the early planning and development phase. The first secure milestone is a local CSV/Excel import with validated sample data and a simple Streamlit view.

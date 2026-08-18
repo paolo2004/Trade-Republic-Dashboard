@@ -80,13 +80,15 @@ st.markdown(
 )
 
 with st.spinner(f"Fetching data for {info.get('longName')}..."):
-    data = ticker.history(period=period)
+    data = ticker.history(period=period) 
+    #st.write(info)
 
 if data.empty:
     st.warning(f"No market data found for {info.get('longName')} ({ticker_symbol}).")
     st.stop()
 
 latest_price = data["Close"].iloc[-1]
+current_price = info.get("currentPrice", "nan")
 previous_close = data["Close"].iloc[-2] if len(data) > 1 else latest_price
 price_change = latest_price - previous_close
 price_change_percent = (price_change / previous_close * 100) if previous_close != 0 else 0
@@ -100,7 +102,7 @@ col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.metric(
         "Current Price",
-        f"${format_number(latest_price, 2)}",
+        f"${format_number(current_price, 2)}",
         f"{price_change_percent:.2f}%" if price_change_percent is not None else "None",
     )
 

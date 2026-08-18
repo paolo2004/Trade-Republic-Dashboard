@@ -3,7 +3,6 @@ import pandas as pd
 import streamlit as st
 import yfinance as yf
 
-
 def get_buy_transactions(df):
     buy_transactions = df[df["type"] == "BUY"].copy()
     if buy_transactions.empty:
@@ -11,7 +10,6 @@ def get_buy_transactions(df):
         st.stop()
     else:
         return buy_transactions
-
 
 @st.cache_data(ttl=900, show_spinner=False)
 def get_current_prices(tickers):
@@ -38,7 +36,6 @@ def get_current_prices(tickers):
             prices[ticker] = np.nan
 
     return prices
-
 
 def calculate_positions(trades):
     """

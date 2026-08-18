@@ -91,7 +91,6 @@ net_interest = income_transactions.loc[
 
 period_income = net_dividends + net_interest
 
-st.write(period_df)
 portfolio_value = portfolio_by_asset["market_value"].sum(min_count=1)
 open_cost_basis = portfolio_by_asset["open_cost_basis"].sum()
 unrealised_profit_loss = portfolio_by_asset["unrealised_profit_loss"].sum(min_count=1)
