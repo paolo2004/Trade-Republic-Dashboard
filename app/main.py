@@ -61,15 +61,33 @@ else:
 
 if "df" in st.session_state:
     df = st.session_state["df"]
-    st.dataframe(df)
 
-    begin_date = df["date"][0]
-    end_date = df["date"].iloc[-1]
+    col1, col2, col3, col4 = st.columns(4)
 
-    st.write(f"**Date Range:** \n {begin_date} - {end_date}")
-    st.write(f"**Total Number of Transactions:** \n {len(df)}")
-    st.write(f"**Currency:** \n {df['currency'].unique()[0]}")
-    st.write(f"**Fees:** \n {df['fee'].sum()} {df['currency'].unique()[0]}")
+    with col1:
+        st.metric("Transactions", len(df))
+
+    with col2:
+        invested = abs(df.loc[df["type"].isin(["BUY", "SELL"]), "amount"].sum())
+        st.metric("Total invested", f"€{invested:,.2f}")
+
+    with col3:
+        assets = df.loc[df ["type"] == "BUY", "name"].nunique()
+        st.metric("Assets purchased", assets)
+
+    with col4:
+        st.metric(
+            "Date range",
+            f"{df['date'].min():%b %Y} – {df['date'].max():%b %Y}",
+        )
+
+    st.info(
+        "Use the pages in the sidebar to explore your portfolio, transactions, "
+        "dividends, expenses, and asset allocation."
+    )
+
+    with st.expander("Show raw transaction data"):
+     st.dataframe(df, use_container_width=True, hide_index=True)
 
 else:
     st.info("Please upload a Trade Republic export file.")
