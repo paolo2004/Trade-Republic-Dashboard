@@ -28,33 +28,45 @@ EXCHANGE_SUFFIXES = {
 
 
 def _format_yahoo_symbol(ticker, exch_code):
+    """Convert an OpenFIGI ticker into a possible Yahoo Finance symbol."""
+
     if not ticker:
         return None
-    ticker = ticker.strip().upper()
+
+    ticker = str(ticker).strip().upper()
+
     if not ticker:
         return None
-    suffix = EXCHANGE_SUFFIXES.get((exch_code or "").upper())
+
+    exch_code = str(exch_code or "").strip().upper()
+
+    suffix = EXCHANGE_SUFFIXES.get(exch_code)
+
     if suffix is None:
         return ticker
+
     if suffix == "":
         return ticker
+
     return f"{ticker}.{suffix}"
 
 
 def _validate_yahoo_ticker(symbol):
+    """Check whether a symbol exists on Yahoo Finance."""
+
     if not symbol:
         return False
 
     try:
-        ticker = yf.Ticker(symbol)
-        info = ticker.info
-        if info and info.get("regularMarketPrice") is not None:
-            return True
-        hist = ticker.history(period="1d")
-        return not hist.empty
+        history = yf.Ticker(symbol).history(
+            period="5d",
+            raise_errors=False
+        )
+
+        return not history.empty
+
     except Exception:
         return False
-
 
 @st.cache_data(show_spinner=False)
 def get_ticker_from_isin(isin):
@@ -113,10 +125,12 @@ def get_ticker_from_isin(isin):
                 return symbol
 
         for candidate in candidates:
-            if _validate_yahoo_ticker(candidate["ticker"]):
-                return candidate["ticker"]
+            ticker = candidate.get("ticker")
 
-        return _format_yahoo_symbol(candidates[0]["ticker"], candidates[0].get("exchCode"))
+            if _validate_yahoo_ticker(ticker):
+                return ticker
+
+        return None
     except requests.exceptions.RequestException:
         return None
     except Exception:
