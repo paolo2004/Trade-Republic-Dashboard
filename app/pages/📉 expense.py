@@ -50,11 +50,11 @@ with col2:
     fig = px.pie(expenses_by_category, values="total_expenses", names="name")
     st.plotly_chart(fig)
 
-st.subheader("Detailed Expenses Data")
-columns_to_display = [
-    "date",
-    "name",
-    "amount",
-    "currency",
-]
-st.dataframe(expenses[columns_to_display])
+with st.expander(" Show Detailed Expenses Data"):
+    columns_to_display = [
+        "date",
+        "name",
+        "amount",
+        "currency",
+    ]
+    st.dataframe(expenses[columns_to_display])

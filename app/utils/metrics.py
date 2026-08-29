@@ -2,9 +2,10 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import yfinance as yf
+from utils.analysis import load_ticker_info
 
-def get_buy_transactions(df):
-    buy_transactions = df[df["type"] == "BUY"].copy()
+def get_trades_transactions(df):
+    buy_transactions = df[df["type"].isin(["BUY", "SELL"])].copy()
     if buy_transactions.empty:
         st.info("No buy transactions found. Allocation cannot be calculated.")
         st.stop()
@@ -12,9 +13,36 @@ def get_buy_transactions(df):
         return buy_transactions
 
 @st.cache_data(ttl=900, show_spinner=False)
+def get_usd_eur_rate():
+    try:
+        ticker = yf.Ticker("USDEUR=X")
+        rate = ticker.fast_info.get("last_price")
+
+        if rate is None or pd.isna(rate):
+            history = ticker.history(period="5d",interval="15m",auto_adjust=False)
+
+            if not history.empty:
+                rate = history["Close"].dropna().iloc[-1]
+
+        if rate is None or pd.isna(rate):
+            return np.nan
+
+        return float(rate)
+
+    except Exception:
+        return np.nan
+    
+def convert_usd_to_eur(price_usd, exchange_rate):
+    if price_usd is None:
+        return None
+
+    return float(price_usd) * float(exchange_rate)
+
+@st.cache_data(ttl=900, show_spinner=False)
 def get_current_prices(tickers):
     """Return latest available Yahoo Finance prices, cached for 15 minutes."""
     prices = {}
+    exchange_rate = get_usd_eur_rate()
 
     for ticker in tickers:
         if not ticker:
@@ -22,16 +50,17 @@ def get_current_prices(tickers):
 
         try:
             yahoo_ticker = yf.Ticker(ticker)
-            price = yahoo_ticker.fast_info.get("last_price")
+            history = yahoo_ticker.history(period="5d",interval="15m", auto_adjust=False)
+            if not history.empty:
+                price = history["Close"].dropna().iloc[-1]
 
-            # Fallback: latest daily closing price if live data is unavailable.
-            if price is None or pd.isna(price):
-                history = yahoo_ticker.history(period="5d", auto_adjust=False)
-                if not history.empty:
-                    price = history["Close"].dropna().iloc[-1]
+            currency =  yahoo_ticker.fast_info.get("currency")
+            if currency == "USD":
+                price_eur = convert_usd_to_eur(price, exchange_rate)
+            elif currency == "EUR":
+                price_eur = float(price)
 
-            prices[ticker] = float(price) if price is not None else np.nan
-
+            prices[ticker] = price_eur
         except Exception:
             prices[ticker] = np.nan
 
@@ -92,21 +121,78 @@ def calculate_positions(trades):
                 open_cost_basis -= removed_cost_basis
                 realised_profit_loss += net_sale_proceeds - removed_cost_basis
 
-        # Do not display assets that were fully sold.
-        if open_shares > 1e-10:
-            positions.append(
-                {
-                    "name": name,
-                    "symbol": symbol,
-                    "asset_class": asset_class,
-                    "ticker": ticker,
-                    "open_shares": open_shares,
-                    "open_cost_basis": open_cost_basis,
-                    "avg_cost_per_share": open_cost_basis / open_shares,
-                    "total_purchase_cost": total_purchase_cost,
-                    "total_sale_proceeds": total_sale_proceeds,
-                    "realised_profit_loss": realised_profit_loss,
-                }
-            )
+          # Avoid tiny floating-point leftovers
+        if abs(open_shares) < 1e-10:
+            open_shares = 0.0
+
+        if abs(open_cost_basis) < 1e-10:
+            open_cost_basis = 0.0
+
+        avg_cost_per_share = (
+            open_cost_basis / open_shares
+            if open_shares > 0
+            else np.nan
+        )
+        positions.append(
+            {
+                "name": name,
+                "symbol": symbol,
+                "asset_class": asset_class,
+                "ticker": ticker,
+                "open_shares": open_shares,
+                "open_cost_basis": open_cost_basis,
+                "avg_cost_per_share": open_cost_basis / open_shares,
+                "total_purchase_cost": total_purchase_cost,
+                "total_sale_proceeds": total_sale_proceeds,
+                "realised_profit_loss": realised_profit_loss,
+            }
+        )
 
     return pd.DataFrame(positions)
+
+def get_sector_for_ticker(ticker_symbol, asset_class):
+    """Return the sector of an asset from Yahoo Finance."""
+    if not ticker_symbol:
+        return "Unknown"
+
+    info = load_ticker_info(ticker_symbol)
+    sector = info.get("industry")
+    if not sector:
+        sector = str(asset_class).strip().upper() or "Unknown"
+
+    return sector
+
+def add_sector_column(allocation_data):
+    """Add a sector column based on each asset's Yahoo Finance ticker."""
+    allocation_data = allocation_data.copy()
+    allocation_data["sector"] = allocation_data.apply(
+        lambda row: get_sector_for_ticker(
+            row["ticker"],
+            row["asset_class"],
+        ),
+        axis=1,
+    )
+
+    return allocation_data
+
+
+def calculate_sector_allocation(allocation_data):
+    """Calculate total invested amount and percentage per sector."""
+    sector_allocation = (
+        allocation_data.groupby("sector", as_index=False)
+        .agg(
+            amount=("total_invested", "sum"),
+            assets=("name", "nunique"),
+        )
+        .sort_values("amount", ascending=False)
+    )
+
+    total_amount = sector_allocation["amount"].sum()
+
+    sector_allocation["percentage"] = (
+        sector_allocation["amount"] / total_amount * 100
+        if total_amount > 0
+        else 0
+    )
+
+    return sector_allocation

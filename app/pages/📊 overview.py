@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 from utils.import_data import check_if_data_loaded, validate_data
-from utils.metrics import calculate_positions, get_current_prices
+from utils.metrics import calculate_positions, get_current_prices, get_trades_transactions
 
 st.set_page_config(
     page_title="Portfolio Overview",
@@ -22,12 +22,7 @@ validate_data(df)
 
 df = df.dropna(subset=["date"]).copy()
 
-trade_transactions = df[df["type"].isin(["BUY", "SELL"])].copy()
-
-if trade_transactions.empty:
-    st.info("No buy or sell transactions found in the uploaded file.")
-    st.stop()
-
+trade_transactions = get_trades_transactions(df)
 
 # The selected period controls income and cash-flow charts. Positions use all
 # history so that buys before the selected period remain part of open holdings.
@@ -51,27 +46,31 @@ period_df = df[df["date"] >= period_start].copy()
 
 # Calculate holdings with average-cost accounting. Sells reduce the open share
 # count and cost basis, while their gain/loss is recorded as realised P/L.
-portfolio_by_asset = calculate_positions(trade_transactions)
+all_positions = calculate_positions(trade_transactions)
 
-if portfolio_by_asset.empty:
-    st.info("There are no open positions after accounting for sell orders.")
+open_positions = all_positions[all_positions["open_shares"] > 1e-10].copy()
+
+if open_positions.empty:
+    st.info(
+        "There are no open positions after accounting for sell orders."
+    )
     st.stop()
 
-tickers = tuple(portfolio_by_asset["ticker"].dropna().loc[lambda values: values != ""].unique())
+tickers = tuple(open_positions["ticker"].dropna().loc[lambda values: values != ""].unique())
 
 with st.spinner("Fetching current market prices..."):
     current_prices = get_current_prices(tickers)
 
-portfolio_by_asset["current_price"] = portfolio_by_asset["ticker"].map(current_prices)
-portfolio_by_asset["market_value"] = (
-    portfolio_by_asset["open_shares"] * portfolio_by_asset["current_price"]
+open_positions["current_price"] = open_positions["ticker"].map(current_prices)
+open_positions["market_value"] = (
+    open_positions["open_shares"] * open_positions["current_price"]
 )
-portfolio_by_asset["unrealised_profit_loss"] = (
-    portfolio_by_asset["market_value"] - portfolio_by_asset["open_cost_basis"]
+open_positions["unrealised_profit_loss"] = (
+    open_positions["market_value"] - open_positions["open_cost_basis"]
 )
-portfolio_by_asset["unrealised_return_pct"] = np.where(
-    portfolio_by_asset["open_cost_basis"] > 0,
-    portfolio_by_asset["unrealised_profit_loss"] / portfolio_by_asset["open_cost_basis"] * 100,
+open_positions["unrealised_return_pct"] = np.where(
+    open_positions["open_cost_basis"] > 0,
+    open_positions["unrealised_profit_loss"] / open_positions["open_cost_basis"] * 100,
     np.nan,
 )
 
@@ -91,10 +90,10 @@ net_interest = income_transactions.loc[
 
 period_income = net_dividends + net_interest
 
-portfolio_value = portfolio_by_asset["market_value"].sum(min_count=1)
-open_cost_basis = portfolio_by_asset["open_cost_basis"].sum()
-unrealised_profit_loss = portfolio_by_asset["unrealised_profit_loss"].sum(min_count=1)
-realised_profit_loss = portfolio_by_asset["realised_profit_loss"].sum()
+portfolio_value = open_positions["market_value"].sum(min_count=1)
+open_cost_basis = open_positions["open_cost_basis"].sum()
+unrealised_profit_loss = open_positions["unrealised_profit_loss"].sum(min_count=1)
+realised_profit_loss = all_positions["realised_profit_loss"].sum()
 total_profit_loss = unrealised_profit_loss + realised_profit_loss + period_income
 cash_value = df[["amount", "fee", "tax"]].sum().sum()
 total_return_pct = total_profit_loss / open_cost_basis * 100 if open_cost_basis > 0 else np.nan
@@ -133,7 +132,7 @@ display_columns = [
     "realised_profit_loss",
 ]
 
-position_table = portfolio_by_asset[display_columns].sort_values("market_value", ascending=False)
+position_table = open_positions[display_columns].sort_values("market_value", ascending=False)
 
 st.dataframe(
     position_table,
@@ -155,9 +154,9 @@ st.dataframe(
     },
 )
 
-if portfolio_by_asset["current_price"].isna().any():
-    missing_prices = portfolio_by_asset.loc[
-        portfolio_by_asset["current_price"].isna(), "name"
+if open_positions["current_price"].isna().any():
+    missing_prices = open_positions.loc[
+        open_positions["current_price"].isna(), "name"
     ].tolist()
     st.warning("No current Yahoo Finance price was found for: " + ", ".join(missing_prices))
 
@@ -168,7 +167,7 @@ left_column, right_column = st.columns(2)
 with left_column:
     st.subheader("Profit / loss by asset")
 
-    pnl_by_asset = portfolio_by_asset.copy()
+    pnl_by_asset = open_positions.copy()
     pnl_by_asset["total_profit_loss"] = (
         pnl_by_asset["unrealised_profit_loss"] + pnl_by_asset["realised_profit_loss"]
     )
@@ -199,7 +198,7 @@ with left_column:
 
 with right_column:
     st.subheader("Unrealised profit/loss by asset")
-    performance = portfolio_by_asset.dropna(subset=["unrealised_profit_loss"]).sort_values(
+    performance = open_positions.dropna(subset=["unrealised_profit_loss"]).sort_values(
         "unrealised_profit_loss"
     )
 
@@ -283,3 +282,5 @@ with st.expander("Income details"):
         }
     )
     st.dataframe(income_summary, use_container_width=True, hide_index=True)
+
+

@@ -615,7 +615,7 @@ def render_asset_analysis_page():
     st.markdown("---")
     render_price_chart(history, display_name, currency)
     st.markdown("---")
-    
+
     if get_asset_type(ticker_symbol, asset_class) == "Crypto":
         render_crypto_information(info, currency)
     elif asset_class == "FUND" or info.get("quoteType") == "ETF":
