@@ -7,8 +7,21 @@ st.set_page_config(page_title="Portfolio Dashboard", page_icon=":bar_chart:", la
 image = Image.open("assets/logo.webp")
 image = image.resize((120, 80))
 
-col1, col2 = st.columns([0.1, 0.9])
+DEMO_FILE = Path(__file__).resolve().parent.parent / "assets" / "demo_transactions.csv"
 
+# =========================================================
+# INITIALIZE SESSION STATE
+# =========================================================
+if "df" not in st.session_state:
+    st.session_state["df"] = None
+
+if "data_source" not in st.session_state:
+    st.session_state["data_source"] = None
+
+if "uploaded_file_name" not in st.session_state:
+    st.session_state["uploaded_file_name"] = None
+
+col1, col2 = st.columns([0.1, 0.9])
 with col1:
     st.image(image)
 
@@ -32,49 +45,57 @@ uploaded_file = st.file_uploader(
     type=["csv", "txt", "xls", "xlsx"],
 )
 
-demo_file = Path(__file__).resolve().parent.parent / "assets" / "demo_transactions.csv"
-
 if uploaded_file is not None:
-   data_source = uploaded_file
-   source_id = f"upload: {uploaded_file.name}:{uploaded_file.size}"
-   source_label = uploaded_file.name
-else:
-    data_source = demo_file
-    source_id = "demo"
-    source_label = "Demo Portfolio"
+    # Only reload when a NEW file was uploaded
+    file_id = f"{uploaded_file.name}_{uploaded_file.size}"
+    if st.session_state.get("uploaded_file_id") != file_id:
+        try:
+            df = load_data(uploaded_file)
+            st.session_state["df"] = df
+            st.session_state["data_source"] = "upload"
+            st.session_state["uploaded_file_name"] = uploaded_file.name
+            st.session_state["uploaded_file_id"] = file_id
+        except Exception as error:
+            st.error(f"Could not load the file: {error}")
+            st.stop()
 
-if st.session_state.get("data_source_id") != source_id:
+# =========================================================
+# LOAD DEMO DATA ONLY IF NOTHING IS STORED
+# =========================================================
+elif st.session_state["df"] is None:
     try:
-        df = load_data(data_source)
+        df = load_data(DEMO_FILE)
         st.session_state["df"] = df
-        st.session_state["data_source_id"] = source_id
-        st.session_state["uploaded_file_name"] = source_label
-    except ValueError as error:
-        st.error(str(error))
-    except Exception:
-        st.error("could not load the selected file")
+        st.session_state["data_source"] = "demo"
+        st.session_state["uploaded_file_name"] = None
+        st.session_state["uploaded_file_id"] = None
+    except Exception as error:
+        st.error(f"Could not load demo data: {error}")
+        st.stop()
 
-if uploaded_file is None:
-    st.info("Showing demo data. Upload your Trade Republic export to use your own portfolio.")
+df = st.session_state["df"]
+
+if st.session_state["data_source"] == "upload":
+    st.success(
+        f"Your personal file is loaded: "
+        f"**{st.session_state['uploaded_file_name']}**"
+    )
 else:
-    st.success("Your personal file is loaded.")
+    st.info(
+        "Showing demo data. Upload your Trade Republic export "
+        "to use your own portfolio."
+    )
 
-if "df" in st.session_state:
-    df = st.session_state["df"]
-
+if df is not None and not df.empty:
     col1, col2, col3, col4 = st.columns(4)
-
     with col1:
         st.metric("Transactions", len(df))
-
     with col2:
         invested = abs(df.loc[df["type"].isin(["BUY", "SELL"]), "amount"].sum())
         st.metric("Total invested", f"€{invested:,.2f}")
-
     with col3:
         assets = df.loc[df ["type"] == "BUY", "name"].nunique()
         st.metric("Assets purchased", assets)
-
     with col4:
         st.metric(
             "Date range",
