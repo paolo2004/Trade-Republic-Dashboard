@@ -2,7 +2,7 @@ import numpy as np
 import plotly.express as px
 import streamlit as st
 from utils.import_data import check_if_data_loaded, validate_data
-from utils.metrics import get_trades_transactions, add_sector_column, calculate_sector_allocation
+from utils.metrics import add_country_column, calculate_country_allocation, get_trades_transactions, add_sector_column, calculate_sector_allocation
 
 st.title("Portfolio Allocation Overview")
 
@@ -50,10 +50,12 @@ col1, col2 = st.columns(2)
 with col1:
     allocation_by_asset["total_invested"] = allocation_by_asset["total_invested"].abs()
     allocation_by_asset = add_sector_column(allocation_by_asset)
+    allocation_by_asset = add_country_column(allocation_by_asset)
     sector_allocation = calculate_sector_allocation(allocation_by_asset)
+    country_allocation = calculate_country_allocation(allocation_by_asset)
     st.subheader("Allocation by Asset")
     sorted_allocation = allocation_by_asset.sort_values(by="total_invested", ascending=False)
-    display_columns = ["name", "total_invested", "total_shares", "number_of_trade_transactions", "sector"]
+    display_columns = ["name", "total_invested", "total_shares", "number_of_trade_transactions", "sector", "country"]
     st.dataframe(
         sorted_allocation[display_columns],
         use_container_width=True,
@@ -125,35 +127,26 @@ with col2:
 
 columns = st.columns(2)
 with columns[0]:
-    st.subheader("Allocation by Sector")
-    st.dataframe(
-        sector_allocation,
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            "sector": "Sector",
-            "amount": st.column_config.NumberColumn(
-                "Amount invested",
-                format="€%.2f",
-            ),
-            "assets": st.column_config.NumberColumn(
-                "Number of assets",
-                format="%d",
-            ),
-            "percentage": st.column_config.NumberColumn(
-                "Portfolio share",
-                format="%.2f%%",
-            ),
-        },
+    st.subheader("Allocation by Country")
+    country_figure = px.pie(
+        country_allocation,
+        values="amount",
+        names="country",
+        hole=0.2,
     )
+    country_figure.update_layout(
+        margin=dict(l=0, r=0, t=20, b=0),
+        showlegend=False,
+    )
+    st.plotly_chart(country_figure, use_container_width=True)
 
 with columns[1]:
+    st.subheader("Allocation by Sector")
     sector_figure = px.pie(
         sector_allocation,
         values="amount",
         names="sector",
         hole=0.2,
-        title="Portfolio Allocation by Sector",
     )
 
     sector_figure.update_traces(
@@ -169,4 +162,4 @@ with columns[1]:
 
 
 with st.expander("Show raw data"):
-    st.dataframe
+    st.dataframe(df, use_container_width=True, hide_index=True)

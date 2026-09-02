@@ -172,7 +172,27 @@ def add_sector_column(allocation_data):
         ),
         axis=1,
     )
+    return allocation_data
 
+def get_country_for_ticker(ticker_symbol, asset_class):
+    """Return the country of an asset from Yahoo Finance."""
+    if not ticker_symbol:
+        return "Unknown"
+    if asset_class in ["ETF", "ETC", "ETN", "FUND"] or asset_class == "CRYPTO":
+        return "Global"
+    
+    info = load_ticker_info(ticker_symbol)
+    country = info.get("country", "Unknown")
+
+    return country
+
+def add_country_column(allocation_data):
+    """Add a country column based on each asset's Yahoo Finance ticker."""
+    allocation_data = allocation_data.copy()
+    allocation_data["country"] = allocation_data.apply(
+        lambda row: get_country_for_ticker(row["ticker"], row["asset_class"]),
+        axis=1,
+    )
     return allocation_data
 
 
@@ -196,3 +216,23 @@ def calculate_sector_allocation(allocation_data):
     )
 
     return sector_allocation
+def calculate_country_allocation(allocation_data):
+    """Calculate total invested amount and percentage per country."""
+    country_allocation = (
+        allocation_data.groupby("country", as_index=False)
+        .agg(
+            amount=("total_invested", "sum"),
+            assets=("name", "nunique"),
+        )
+        .sort_values("amount", ascending=False)
+    )
+
+    total_amount = country_allocation["amount"].sum()
+
+    country_allocation["percentage"] = (
+        country_allocation["amount"] / total_amount * 100
+        if total_amount > 0
+        else 0
+    )
+
+    return country_allocation

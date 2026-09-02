@@ -7,6 +7,13 @@ st.set_page_config(page_title="Portfolio Dashboard", page_icon=":bar_chart:", la
 image = Image.open("assets/logo.webp")
 image = image.resize((120, 80))
 
+# =========================================================
+# LOAD CUSTOM CSS
+# =========================================================
+CSS_FILE = Path(__file__).resolve().parent / "styles" / "dashboard.css"
+with open(CSS_FILE, "r", encoding="utf-8") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
 DEMO_FILE = Path(__file__).resolve().parent.parent / "assets" / "demo_transactions.csv"
 
 # =========================================================
@@ -25,24 +32,64 @@ col1, col2 = st.columns([0.1, 0.9])
 with col1:
     st.image(image)
 
-html_title = """
-    <style>
-    h1 {
-        font-weight: bold;
-        padding:1px;
-        color: #4CAF50;
-        border-radius: 6px;
-    }
-    </style>
-    <center><h1>Trade Republic Dashboard</h1></center>
-"""
+with col2:
+    st.markdown("""
+    <div class="dashboard-title">
+        <h1>Portfolio Dashboard</h1>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("## What you can analyze")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.markdown("""
+    ### 📈 Portfolio Overview
+    Monitor your portfolio value, invested capital and overall
+    performance over time.
+    """)
 
 with col2:
-    st.markdown(html_title, unsafe_allow_html=True)
+    st.markdown("""
+    ### 🧩 Asset Allocation
+    Understand how your portfolio is distributed across stocks,
+    ETFs, cryptocurrencies and other assets.
+    """)
+
+with col3:
+    st.markdown("""
+    ### 💰 Dividends
+    Track dividend payments and see which investments generate
+    passive income.
+    """)
+
+col4, col5, col6 = st.columns(3)
+
+with col4:
+    st.markdown("""
+    ### 🧾 Transactions
+    Explore all your buy, sell and savings-plan transactions
+    in one place.
+    """)
+
+with col5:
+    st.markdown("""
+    ### 💸 Fees & Expenses
+    Analyze transaction costs, fees and other expenses related
+    to your investments.
+    """)
+
+with col6:
+    st.markdown("""
+    ### 🔎 Asset Analysis
+    Inspect individual securities and compare your purchase
+    history with current market information.
+    """)
 
 uploaded_file = st.file_uploader(
     ":file_folder: Upload your own file",
-    type=["csv", "txt", "xls", "xlsx"],
+    type=["csv"],
 )
 
 if uploaded_file is not None:
@@ -81,25 +128,34 @@ if st.session_state["data_source"] == "upload":
         f"**{st.session_state['uploaded_file_name']}**"
     )
 else:
-    st.info(
-        "Showing demo data. Upload your Trade Republic export "
-        "to use your own portfolio."
-    )
+    st.info(""" 🧪 **Demo Mode**
+
+    You're currently exploring the dashboard with example Trade Republic
+    transactions.
+
+    Upload your own CSV export above to replace the demo data
+    with your personal portfolio.
+    """)
 
 if df is not None and not df.empty:
+    st.markdown("## Portfolio Snapshot")
+    st.caption(
+        "A quick overview based on the currently loaded transaction history."
+    )
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Transactions", len(df))
+        st.metric("Transactions", len(df), help="Total number of transactions in the imported dataset.")
     with col2:
         invested = abs(df.loc[df["type"].isin(["BUY", "SELL"]), "amount"].sum())
-        st.metric("Total invested", f"€{invested:,.2f}")
+        st.metric("Total invested", f"€{invested:,.2f}", help="Total amount invested in the portfolio.")
     with col3:
         assets = df.loc[df ["type"] == "BUY", "name"].nunique()
-        st.metric("Assets purchased", assets)
+        st.metric("Assets purchased", assets, help="Number of unique assets purchased.")
     with col4:
         st.metric(
             "Date range",
             f"{df['date'].min():%b %Y} – {df['date'].max():%b %Y}",
+            help="The date range of the loaded transaction data."
         )
 
     st.info(
