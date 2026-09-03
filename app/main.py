@@ -10,7 +10,7 @@ image = image.resize((120, 80))
 # =========================================================
 # LOAD CUSTOM CSS
 # =========================================================
-CSS_FILE = Path(__file__).resolve().parent / "styles" / "dashboard.css"
+CSS_FILE = Path(__file__).resolve().parent / "styles" / "main.css"
 with open(CSS_FILE, "r", encoding="utf-8") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
