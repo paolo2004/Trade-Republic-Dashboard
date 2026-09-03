@@ -3,7 +3,7 @@ from PIL import Image
 from utils.import_data import load_data
 from pathlib import Path
 
-st.set_page_config(page_title="Portfolio Dashboard", page_icon=":bar_chart:", layout="wide")
+st.set_page_config(page_title="🏠 Home", page_icon="🏠", layout="wide")
 image = Image.open("assets/logo.webp")
 image = image.resize((120, 80))
 
