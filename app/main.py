@@ -3,7 +3,7 @@ from PIL import Image
 from utils.import_data import load_data
 from pathlib import Path
 
-st.set_page_config(page_title="🏠 Home", page_icon="🏠", layout="wide")
+st.set_page_config(page_title="🏠 Home", layout="wide")
 image = Image.open("assets/logo.webp")
 image = image.resize((120, 80))
 
@@ -86,7 +86,6 @@ uploaded_file = st.file_uploader(
     ":file_folder: Upload your own file",
     type=["csv"],
 )
-
 if uploaded_file is not None:
     # Only reload when a NEW file was uploaded
     file_id = f"{uploaded_file.name}_{uploaded_file.size}"

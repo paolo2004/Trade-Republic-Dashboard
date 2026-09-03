@@ -1,16 +1,7 @@
-[server]
-headless = true
-port = 8501
-enableCORS = false
-
 [theme]
 base = "dark"
 primaryColor = "#F63366"
 font = "sans serif"
-
-[client]
-toolbarMode = "auto"
-codeFontSize = "1rem"
 
 [logger]
 level = "info"
