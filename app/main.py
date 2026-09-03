@@ -28,16 +28,11 @@ if "data_source" not in st.session_state:
 if "uploaded_file_name" not in st.session_state:
     st.session_state["uploaded_file_name"] = None
 
-col1, col2 = st.columns([0.1, 0.9])
-with col1:
-    st.image(image)
-
-with col2:
-    st.markdown("""
-    <div class="dashboard-title">
-        <h1>Portfolio Dashboard</h1>
-    </div>
-    """, unsafe_allow_html=True)
+st.markdown("""
+<div class="dashboard-title">
+    <h1>Portfolio Dashboard</h1>
+</div>
+""", unsafe_allow_html=True)
 
 st.markdown("## What you can analyze")
 

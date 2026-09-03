@@ -9,7 +9,8 @@ primaryColor = "#F63366"
 font = "sans serif"
 
 [client]
-toolbarMode = "minimal"
+toolbarMode = "auto"
+codeFontSize = "1rem"
 
 [logger]
 level = "info"

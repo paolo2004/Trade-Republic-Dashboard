@@ -23,6 +23,12 @@
     max-width: 1500px;
 }
 
+/* Add spacing after major elements */
+[data-testid="stMetric"] {
+    margin-bottom: 1rem;
+    padding: 0.5rem 0;
+}
+
 /* =========================================================
    TITLE
    ========================================================= */
@@ -30,13 +36,12 @@
     text-align: center;
     margin-top: 1rem;
     margin-bottom: 2rem;
+    background: linear-gradient(135deg, rgba(30, 90, 140, 0.1), rgba(20, 100, 80, 0.08));
+    padding: 2rem 1.5rem;
+    border-radius: 16px;
+    border: 1px solid rgba(100, 150, 200, 0.15);
 }
-.dashboard-title h1 {
-    font-size: 2.7rem;
-    font-weight: 700;
-    letter-spacing: -0.03em;
-    margin-bottom: 0.3rem;
-}
+
 .dashboard-title p {
     color: #8b95a5;
     font-size: 1rem;
@@ -51,6 +56,15 @@
     border-radius: 14px;
     padding: 18px 20px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+[data-testid="stMetric"]:hover {
+    background: rgba(30, 40, 50, 0.9);
+    border-color: rgba(100, 150, 200, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(30, 90, 140, 0.2);
 }
 
 [data-testid="stMetricLabel"] {
@@ -66,10 +80,16 @@
    FILE UPLOADER
    ========================================================= */
 [data-testid="stFileUploader"] {
-    background: rgba(25, 31, 40, 0.75);
-    border: 1px dashed rgba(100, 150, 200, 0.35);
+    background: linear-gradient(135deg, rgba(30, 90, 140, 0.15), rgba(25, 31, 40, 0.75));
+    border: 2px dashed rgba(100, 150, 200, 0.5);
     border-radius: 14px;
-    padding: 10px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+[data-testid="stFileUploader"]:hover {
+    border-color: rgba(100, 150, 200, 0.8);
+    background: linear-gradient(135deg, rgba(30, 90, 140, 0.25), rgba(25, 31, 40, 0.85));
 }
 
 /* =========================================================
@@ -77,13 +97,26 @@
    ========================================================= */
 [data-testid="stAlert"] {
     border-radius: 10px;
+    border-left: 4px solid rgba(100, 150, 200, 0.6);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
 }
 
 /* =========================================================
    EXPANDER
    ========================================================= */
 [data-testid="stExpander"] {
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(100, 150, 200, 0.2);
     border-radius: 12px;
-    background: rgba(18, 23, 30, 0.6);
+    background: rgba(18, 23, 30, 0.8);
+    transition: all 0.3s ease;
+}
+
+[data-testid="stExpander"]:hover {
+    border-color: rgba(100, 150, 200, 0.4);
+    background: rgba(25, 31, 40, 0.9);
+}
+
+* {
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
