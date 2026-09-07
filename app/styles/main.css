@@ -32,39 +32,56 @@
 /* =========================================================
    TITLE
    ========================================================= */
-.dashboard-title {
-    text-align: center;
-    margin-top: 1rem;
-    margin-bottom: 2rem;
-    background: linear-gradient(135deg, rgba(30, 90, 140, 0.1), rgba(20, 100, 80, 0.08));
-    padding: 2rem 1.5rem;
-    border-radius: 16px;
-    border: 1px solid rgba(100, 150, 200, 0.15);
+.dashboard-hero {
+    padding: 2.5rem 2.75rem;
+    margin-bottom: 1.5rem;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(76, 141, 255, 0.12),
+            rgba(50, 196, 141, 0.04)
+        );
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 20px;
 }
 
-.dashboard-title p {
+.dashboard-hero h1 {
+    margin: 0.4rem 0 0.6rem 0;
+    font-size: 2.1rem;
+    letter-spacing: -0.04em;
+}
+
+.dashboard-hero p {
+    margin: 0;
+    max-width: 650px;
     color: #8b95a5;
-    font-size: 1rem;
+    font-size: 1.05rem;
+    line-height: 1.6;
+}
+
+.hero-badge {
+    text-align: center;
+    font-size: 2.7rem;
+    font-weight: 600;
+    letter-spacing: 0.10em;
+    color: #73a6ff;
 }
 
 /* =========================================================
    METRIC CARDS
    ========================================================= */
 [data-testid="stMetric"] {
-    background: rgba(25, 31, 40, 0.85);
+    background:rgba(19, 26, 35, 0.82);
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 14px;
-    padding: 18px 20px;
+    padding: 1rem 1.5rem;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     transition: all 0.3s ease;
-    cursor: pointer;
 }
 
 [data-testid="stMetric"]:hover {
-    background: rgba(30, 40, 50, 0.9);
-    border-color: rgba(100, 150, 200, 0.4);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(30, 90, 140, 0.2);
+    border-color: rgba(76, 141, 255, 0.22);
+    transform: translateY(-1px);
 }
 
 [data-testid="stMetricLabel"] {
@@ -119,4 +136,44 @@
 
 * {
     transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* =========================================================
+   FEATURE CARDS
+   ========================================================= */
+.feature-card {
+    height: 155px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    background: rgba(18, 24, 32, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    transition:
+        transform 160ms ease,
+        border-color 160ms ease,
+        background 160ms ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-2px);
+    background: rgba(22, 30, 40, 0.92);
+    border-color: rgba(76, 141, 255, 0.22);
+}
+
+.feature-icon {
+    font-size: 1.35rem;
+    margin-bottom: .75rem;
+}
+
+.feature-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: .35rem;
+}
+
+.feature-description {
+    color: #8b95a5;
+
+    font-size: .88rem;
+    line-height: 1.5;
 }

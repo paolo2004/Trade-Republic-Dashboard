@@ -7,6 +7,18 @@ st.set_page_config(page_title="Home", layout="wide")
 image = Image.open("assets/logo.webp")
 image = image.resize((120, 80))
 
+def feature_card(icon, title, description):
+    st.markdown(
+        f"""
+        <div class="feature-card">
+            <div class="feature-icon">{icon}</div>
+            <div class="feature-title">{title}</div>
+            <div class="feature-description">{description}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
 # =========================================================
 # LOAD CUSTOM CSS
 # =========================================================
@@ -29,63 +41,76 @@ if "uploaded_file_name" not in st.session_state:
     st.session_state["uploaded_file_name"] = None
 
 st.markdown("""
-<div class="dashboard-title">
-    <h1>Portfolio Dashboard</h1>
+<div class="dashboard-hero">
+    <div class="hero-badge">PERSONAL PORTFOLIO ANALYTICS</div>
+    <h1>Understand your portfolio.</h1>
+    <p>
+        Explore performance, allocation, transactions and passive
+        income from your Trade Republic data.
+    </p>
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown("## What you can analyze")
+with st.container(border=True):
+    st.markdown("### Import portfolio")
+    st.caption(
+        "Upload your Trade Republic CSV export, "
+        "or continue exploring with the demo portfolio."
+    )
 
+    uploaded_file = st.file_uploader(
+        "Upload CSV",
+        type=["csv"],
+        label_visibility="collapsed",
+    )
+
+
+st.markdown("## Explore your portfolio")
 col1, col2, col3 = st.columns(3)
-
 with col1:
-    st.markdown("""
-    ### 📈 Portfolio Overview
-    Monitor your portfolio value, invested capital and overall
-    performance over time.
-    """)
+    feature_card(
+        "📈",
+        "Portfolio Overview",
+        "Monitor portfolio value, invested capital and performance."
+    )
 
 with col2:
-    st.markdown("""
-    ### 🧩 Asset Allocation
-    Understand how your portfolio is distributed across stocks,
-    ETFs, cryptocurrencies and other assets.
-    """)
+    feature_card(
+        "🥧",
+        "Asset Allocation",
+        "See how your portfolio is distributed across assets and sectors."
+    )
 
 with col3:
-    st.markdown("""
-    ### 💰 Dividends
-    Track dividend payments and see which investments generate
-    passive income.
-    """)
+    feature_card(
+        "💸",
+        "Dividends",
+        "Track dividend income, taxes and your strongest income sources."
+    )
 
 col4, col5, col6 = st.columns(3)
 
 with col4:
-    st.markdown("""
-    ### 🧾 Transactions
-    Explore all your buy, sell and savings-plan transactions
-    in one place.
-    """)
+    feature_card(
+        "🔁",
+        "Transactions",
+        "Search and analyse your complete transaction history."
+    )
 
 with col5:
-    st.markdown("""
-    ### 💸 Fees & Expenses
-    Analyze transaction costs, fees and other expenses related
-    to your investments.
-    """)
+    feature_card(
+        "💳",
+        "Expenses",
+        "Understand fees, card expenses and spending activity."
+    )
 
 with col6:
-    st.markdown("""
-    ### 🔎 Asset Analysis
-    Inspect individual securities and compare your purchase
-    history with current market information.
-    """)
+    feature_card(
+        "🔎",
+        "Asset Analysis",
+        "Inspect individual investments in greater detail."
+    )
 
-uploaded_file = st.file_uploader(
-    ":file_folder: Upload your own file",
-    type=["csv"],
-)
 if uploaded_file is not None:
     # Only reload when a NEW file was uploaded
     file_id = f"{uploaded_file.name}_{uploaded_file.size}"
@@ -118,18 +143,10 @@ df = st.session_state["df"]
 
 if st.session_state["data_source"] == "upload":
     st.success(
-        f"Your personal file is loaded: "
-        f"**{st.session_state['uploaded_file_name']}**"
+        f"✓ Using {st.session_state['uploaded_file_name']}"
     )
 else:
-    st.info(""" 🧪 **Demo Mode**
-
-    You're currently exploring the dashboard with example Trade Republic
-    transactions.
-
-    Upload your own CSV export above to replace the demo data
-    with your personal portfolio.
-    """)
+    st.info("🧪 Demo portfolio loaded · Upload a CSV to use your own data")
 
 if df is not None and not df.empty:
     st.markdown("## Portfolio Snapshot")
