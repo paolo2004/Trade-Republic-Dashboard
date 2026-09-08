@@ -2,8 +2,10 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+from utils.chart import style_chart
 from utils.import_data import check_if_data_loaded, validate_data
 from utils.metrics import calculate_positions, get_current_prices, get_trades_transactions
+from pathlib import Path
 
 st.set_page_config(
     page_title="Portfolio Overview",
@@ -11,24 +13,51 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title("💼 Portfolio Overview")
-st.caption("Open positions, realised gains, income, and current portfolio value.")
+CSS_FILE = (
+    Path(__file__).resolve().parent.parent
+    / "styles"
+    / "overview.css"
+)
 
+with open(CSS_FILE, "r", encoding="utf-8") as f:
+    st.markdown(
+        f"<style>{f.read()}</style>",
+        unsafe_allow_html=True,
+    )
 
 # Load and normalise the exported transactions.
 check_if_data_loaded()
 df = st.session_state["df"].copy()
 validate_data(df)
-
-df = df.dropna(subset=["date"]).copy()
-
-trade_transactions = get_trades_transactions(df)
-
-# The selected period controls income and cash-flow charts. Positions use all
-# history so that buys before the selected period remain part of open holdings.
 latest_date = df["date"].max()
 period_options = ("YTD", "6M", "1Y", "2Y", "All")
-selected_period = st.selectbox("Analysis period", period_options)
+
+header_left, header_right = st.columns([3.5, 1],vertical_alignment="bottom",)
+
+with header_left:
+    st.markdown(
+        """
+        <div class="overview-header">
+            <h1>Portfolio Overview</h1>
+            <p>
+                Track portfolio value, performance,
+                holdings and investment income.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+with header_right:
+    st.caption("ANALYSIS PERIOD")
+    selected_period = st.selectbox(
+        "Analysis period",
+        period_options,
+        label_visibility="collapsed",
+    )
+
+df = df.dropna(subset=["date"]).copy()
+trade_transactions = get_trades_transactions(df)
 
 if selected_period == "YTD":
     period_start = pd.Timestamp(year=latest_date.year, month=1, day=1)
@@ -99,6 +128,10 @@ cash_value = df[["amount", "fee", "tax"]].sum().sum()
 total_return_pct = total_profit_loss / open_cost_basis * 100 if open_cost_basis > 0 else np.nan
 
 # Portfolio summary
+st.markdown(
+    '<div class="section-label">PORTFOLIO SUMMARY</div>',
+    unsafe_allow_html=True,
+)
 col1, col2, col3, col4, col5 = st.columns(5)
 col1.metric("Portfolio value", f"€{portfolio_value:,.2f}")
 col2.metric(
@@ -113,11 +146,158 @@ col4.metric(
     f"{total_return_pct:.2f}%" if pd.notna(total_return_pct) else None,
 )
 col5.metric("Cash", f"€{cash_value:,.2f}")
-# col5.metric("Period Income", f"€{period_income:,.2f}")
 
+# Charts
+left_column, right_column = st.columns(2)
+
+with left_column:
+    with st.container(border=True):
+        st.markdown("### Total performance by asset")
+        st.caption(
+            "Total realised and unrealised performance "
+            "for each open position."
+        )
+
+        pnl_by_asset = open_positions.copy()
+        pnl_by_asset["total_profit_loss"] = (
+            pnl_by_asset["unrealised_profit_loss"] + pnl_by_asset["realised_profit_loss"]
+        )
+
+        pnl_by_asset = pnl_by_asset.sort_values("total_profit_loss")
+
+        figure = px.bar(
+            pnl_by_asset,
+            x="total_profit_loss",
+            y="name",
+            orientation="h",
+            color="total_profit_loss",
+            color_continuous_scale=[
+                "#ff647c",
+                "#475569",
+                "#32c48d",
+            ],
+            labels={
+                "name": "",
+                "total_profit_loss": "Profit / loss (€)",
+            },
+        )
+        figure = style_chart(figure)
+
+        st.plotly_chart(figure, use_container_width=True, config={"displayModeBar": False},)
+
+with right_column:
+    with st.container(border=True):
+        st.markdown("### Cost basis vs market value")
+        st.caption(
+            "Compare the amount invested in each open position "
+            "with its current market value."
+        )
+        value_comparison = (
+            open_positions[
+                ["name", "open_cost_basis", "market_value"]
+            ]
+            .dropna(subset=["market_value"])
+            .sort_values("market_value")
+        )
+
+        figure = px.bar(
+            value_comparison,
+            y="name",
+            x=["open_cost_basis", "market_value"],
+            orientation="h",
+            barmode="group",
+            color_discrete_map={
+                "open_cost_basis": "#b8d3f8",
+                "market_value": "#4c8dff",
+            },
+            labels={
+                "name": "",
+                "value": "Value (€)",
+                "variable": "",
+            },
+        )
+
+        figure = style_chart(figure)
+        st.plotly_chart(
+            figure,
+            use_container_width=True,
+            config={"displayModeBar": False},
+        )
+
+
+# Cash-flow and income during the selected period
+chart_left, chart_right = st.columns(2)
+
+with chart_left:
+    with st.container(border=True):
+        st.markdown("### Investment flow")
+        st.caption(
+            "The net cash flow from all buy and sell transactions ")
+        investment_flow = period_df[period_df["type"].isin(["BUY", "SELL"])].copy()
+        investment_flow["net_cash_flow"] = (
+            investment_flow["amount"] + investment_flow["fee"] + investment_flow["tax"]
+        )
+        investment_flow["month"] = investment_flow["date"].dt.to_period("M").astype(str)
+        monthly_cash_flow = investment_flow.groupby("month", as_index=False)["net_cash_flow"].sum()
+
+        figure = px.bar(
+            monthly_cash_flow,
+            x="month",
+            y="net_cash_flow",
+            color="net_cash_flow",
+            color_continuous_scale=[
+                        "#ff647c",
+                        "#475569",
+                        "#32c48d",
+                    ],
+            labels={"month": "", "net_cash_flow": "Net cash flow (€)"},
+        )
+        st.plotly_chart(figure, use_container_width=True)
+
+with chart_right:
+    with st.container(border=True):
+        st.markdown("### Passive income")
+        st.caption(
+            "Monthly net cash movement generated by buy and sell orders."
+        )
+        st.subheader("Passive income")
+        passive_income = income_transactions[
+            income_transactions["type"].isin(["DIVIDEND", "INTEREST_PAYMENT"])
+        ].copy()
+
+        if passive_income.empty:
+            st.info("No dividends or interest payments in the selected period.")
+        else:
+            monthly_income = passive_income.groupby(["month", "type"], as_index=False)[
+                "net_income"
+            ].sum()
+
+            figure = px.bar(
+                monthly_income,
+                x="month",
+                y="net_income",
+                color="type",
+                barmode="group",
+                labels={"month": "", "net_income": "Net income (€)", "type": ""},
+            )
+            st.plotly_chart(figure, use_container_width=True)
 
 # Open positions table
-st.subheader("Open positions")
+st.markdown(
+    """
+    <div class="section-header">
+        <div>
+            <div class="section-label">HOLDINGS</div>
+            <h2>Open positions</h2>
+            <p>
+                Current holdings with cost basis,
+                market value and performance.
+            </p>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 display_columns = [
     "name",
@@ -159,111 +339,6 @@ if open_positions["current_price"].isna().any():
         open_positions["current_price"].isna(), "name"
     ].tolist()
     st.warning("No current Yahoo Finance price was found for: " + ", ".join(missing_prices))
-
-
-# Charts
-left_column, right_column = st.columns(2)
-
-with left_column:
-    st.subheader("Profit / loss by asset")
-
-    pnl_by_asset = open_positions.copy()
-    pnl_by_asset["total_profit_loss"] = (
-        pnl_by_asset["unrealised_profit_loss"] + pnl_by_asset["realised_profit_loss"]
-    )
-
-    pnl_by_asset = pnl_by_asset.sort_values("total_profit_loss")
-
-    figure = px.bar(
-        pnl_by_asset,
-        x="total_profit_loss",
-        y="name",
-        orientation="h",
-        color="total_profit_loss",
-        color_continuous_scale=["#d62728", "#f7f7f7", "#2ca02c"],
-        labels={
-            "name": "",
-            "total_profit_loss": "Profit / loss (€)",
-        },
-    )
-
-    figure.update_traces(hovertemplate="%{y}<br>total_profit_loss: €%{x:,.2f}<extra></extra>")
-
-    figure.update_xaxes(
-        tickprefix="€",
-        tickformat=",.2f",
-    )
-
-    st.plotly_chart(figure, use_container_width=True)
-
-with right_column:
-    st.subheader("Unrealised profit/loss by asset")
-    performance = open_positions.dropna(subset=["unrealised_profit_loss"]).sort_values(
-        "unrealised_profit_loss"
-    )
-
-    figure = px.bar(
-        performance,
-        x="unrealised_profit_loss",
-        y="name",
-        orientation="h",
-        color="unrealised_profit_loss",
-        color_continuous_scale=["#d62728", "#f7f7f7", "#2ca02c"],
-        labels={"unrealised_profit_loss": "Unrealised P/L (€)", "name": ""},
-    )
-
-    figure.update_traces(hovertemplate="%{y}<br>Unrealised P/L: €%{x:,.2f}<extra></extra>")
-
-    figure.update_xaxes(
-        tickprefix="€",
-        tickformat=",.2f",
-    )
-
-    st.plotly_chart(figure, use_container_width=True)
-
-
-# Cash-flow and income during the selected period
-chart_left, chart_right = st.columns(2)
-
-with chart_left:
-    st.subheader("Net investment cash flow")
-    investment_flow = period_df[period_df["type"].isin(["BUY", "SELL"])].copy()
-    investment_flow["net_cash_flow"] = (
-        investment_flow["amount"] + investment_flow["fee"] + investment_flow["tax"]
-    )
-    investment_flow["month"] = investment_flow["date"].dt.to_period("M").astype(str)
-    monthly_cash_flow = investment_flow.groupby("month", as_index=False)["net_cash_flow"].sum()
-
-    figure = px.bar(
-        monthly_cash_flow,
-        x="month",
-        y="net_cash_flow",
-        labels={"month": "", "net_cash_flow": "Net cash flow (€)"},
-    )
-    st.plotly_chart(figure, use_container_width=True)
-
-with chart_right:
-    st.subheader("Passive income")
-    passive_income = income_transactions[
-        income_transactions["type"].isin(["DIVIDEND", "INTEREST_PAYMENT"])
-    ].copy()
-
-    if passive_income.empty:
-        st.info("No dividends or interest payments in the selected period.")
-    else:
-        monthly_income = passive_income.groupby(["month", "type"], as_index=False)[
-            "net_income"
-        ].sum()
-
-        figure = px.bar(
-            monthly_income,
-            x="month",
-            y="net_income",
-            color="type",
-            barmode="group",
-            labels={"month": "", "net_income": "Net income (€)", "type": ""},
-        )
-        st.plotly_chart(figure, use_container_width=True)
 
 
 with st.expander("Income details"):

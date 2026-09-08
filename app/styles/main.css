@@ -80,6 +80,7 @@
 }
 
 [data-testid="stMetric"]:hover {
+    background: rgba(22, 30, 40, 0.90);
     border-color: rgba(76, 141, 255, 0.22);
     transform: translateY(-1px);
 }
@@ -89,7 +90,7 @@
     font-size: 0.85rem;
 }
 [data-testid="stMetricValue"] {
-    font-size: 1.8rem;
+    font-size: 1.55rem;
     font-weight: 600;
 }
 
