@@ -30,8 +30,6 @@ def style_chart(fig, height=350):
     fig.update_xaxes(
         showgrid=False,
         zeroline=False,
-        tickprefix="€",
-        tickformat=",.0f",
     )
 
     fig.update_yaxes(

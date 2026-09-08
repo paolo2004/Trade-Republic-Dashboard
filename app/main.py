@@ -41,7 +41,7 @@ if "uploaded_file_name" not in st.session_state:
     st.session_state["uploaded_file_name"] = None
 
 st.markdown("""
-<div class="dashboard-hero">
+<div class="header">
     <div class="hero-badge">PERSONAL PORTFOLIO ANALYTICS</div>
     <h1>Understand your portfolio.</h1>
     <p>

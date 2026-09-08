@@ -32,7 +32,7 @@
 /* =========================================================
    TITLE
    ========================================================= */
-.dashboard-hero {
+.header {
     padding: 2.5rem 2.75rem;
     margin-bottom: 1.5rem;
     background:
@@ -45,13 +45,13 @@
     border-radius: 20px;
 }
 
-.dashboard-hero h1 {
+.header h1 {
     margin: 0.4rem 0 0.6rem 0;
     font-size: 2rem;
     letter-spacing: -0.04em;
 }
 
-.dashboard-hero p {
+.header p {
     margin: 0;
     max-width: 650px;
     color: #8b95a5;

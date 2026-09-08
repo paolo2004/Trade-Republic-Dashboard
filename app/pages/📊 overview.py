@@ -13,17 +13,16 @@ st.set_page_config(
     layout="wide",
 )
 
-CSS_FILE = (
-    Path(__file__).resolve().parent.parent
-    / "styles"
-    / "overview.css"
-)
+APP_DIR = Path(__file__).resolve().parent.parent
+for css_name in ["main.css", "dividends.css"]:
+    css_file = APP_DIR / "styles" / css_name
 
-with open(CSS_FILE, "r", encoding="utf-8") as f:
-    st.markdown(
-        f"<style>{f.read()}</style>",
-        unsafe_allow_html=True,
-    )
+    with open(css_file, "r", encoding="utf-8") as f:
+        st.markdown(
+            f"<style>{f.read()}</style>",
+            unsafe_allow_html=True,
+        )
+
 
 # Load and normalise the exported transactions.
 check_if_data_loaded()
@@ -37,7 +36,7 @@ header_left, header_right = st.columns([3.5, 1],vertical_alignment="bottom",)
 with header_left:
     st.markdown(
         """
-        <div class="overview-header">
+        <div class="header">
             <h1>Portfolio Overview</h1>
             <p>
                 Track portfolio value, performance,

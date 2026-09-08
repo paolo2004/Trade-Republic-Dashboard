@@ -2,14 +2,22 @@ import plotly.express as px
 import streamlit as st
 import pandas as pd
 from utils.import_data import check_if_data_loaded, validate_data
+from  pathlib import Path
+from utils.chart import style_chart 
 
 st.set_page_config(page_title="Dividends", page_icon="💸", layout="wide")
-st.title("Dividends")
-st.caption("Track your dividend income, taxes, payment activity, and income sources.")
 
+APP_DIR = Path(__file__).resolve().parent.parent
+for css_name in ["main.css", "dividends.css"]:
+    css_file = APP_DIR / "styles" / css_name
+
+    with open(css_file, "r", encoding="utf-8") as f:
+        st.markdown(
+            f"<style>{f.read()}</style>",
+            unsafe_allow_html=True,
+        )
 
 check_if_data_loaded()
-
 df = st.session_state["df"]
 validate_data(df)
 dividends = df[df["type"] == "DIVIDEND"].copy()
@@ -18,37 +26,63 @@ if dividends.empty:
     st.info("No dividend payments were found in the currently loaded export.")
     st.stop()
 
+period_options = (
+    "All time",
+    "Current year",
+    "Last 12 months",
+    "Custom range",
+)
 min_date = dividends["date"].min()
 max_date = dividends["date"].max()
 dividends["net_income"] = dividends["amount"] + dividends["tax"]
 
-st.sidebar.header("Dividend filters")
-
-period = st.sidebar.selectbox(
-    "Period", 
-    ["All time", "Current year", "Last 12 months", "Custom range"],
+header_left, header_right = st.columns(
+    [3.5, 1],
+    vertical_alignment="bottom",
 )
+
+with header_left:
+    st.markdown(
+        """
+        <div class="header">
+            <h1>Dividend Income</h1>
+            <p>
+                Track dividend income, taxes,
+                payment activity and income sources.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+with header_right:
+    st.caption("PERIOD")
+    period = st.selectbox(
+        "Period",
+        period_options,
+        label_visibility="collapsed",
+    )
+    if period == "Custom range":
+        selected_dates = st.date_input(
+            "Custom date range",
+            value=(min_date.date(), max_date.date()),
+            min_value=min_date.date(),
+            max_value=max_date.date(),
+        )
+        if len(selected_dates) != 2:
+            st.warning("Please select a start and a end date")
+            st.stop()
+        start_date, end_date = selected_dates
+        filtered_dividends = dividends[
+            (dividends["date"].dt.date >= start_date)
+            & (dividends["date"].dt.date <= end_date)
+        ].copy()
 
 if period == "Current year":
     filtered_dividends = dividends[dividends["date"].dt.year == max_date.year].copy()
 elif period == "Last 12 months":
     start_date = max_date - pd.DateOffset(months=12)
-elif period == "Custom range":
-    selected_dates = st.sidebar.date_input(
-        "Select date range",
-        value = (min_date.date(), max_date.date()),
-        min_value=min_date.date(),
-        max_value=max_date.date(),
-    )
-    if len(selected_dates) != 2:
-        st.warning("Please select a start and a end date")
-        st.stop()
-
-    start_date, end_date = selected_dates
-    filtered_dividends = dividends[
-        (dividends["date"].dt.date >= start_date)
-        & (dividends["date"].dt.date <= end_date)
-    ].copy()
+    filtered_dividends = dividends[dividends["date"] >= start_date].copy()
 else:
     filtered_dividends = dividends.copy()
 
@@ -75,7 +109,11 @@ monthly_income = (
 )
 
 best_month = monthly_income.loc[monthly_income["net_dividends"].idxmax()]
-st.subheader ("Dividends overview")
+
+st.markdown(
+    '<div class="section-label">DIVIDEND SUMMARY</div>',
+    unsafe_allow_html=True,
+)
 
 col1, col2, col3, col4, col5 = st.columns(5)
 with col1:
@@ -88,7 +126,6 @@ with col4:
     st.metric("Payments", payments)
 with col5:
     st.metric("Paying assets", paying_assets)
-st.markdown("---")
 
 col1, col2, col3 = st.columns(3)
 with col1:
@@ -98,60 +135,72 @@ with col2:
 with col3:
     st.metric(
         "Best month",
-        best_month["month"],
+        str(best_month["month"]),
         delta=f"€{best_month['net_dividends']:,.2f} net",
     )
-st.divider() #st.markdown("---")
+
+st.markdown(
+    '<div class="section-label">INCOME OVER TIME</div>',
+    unsafe_allow_html=True,
+)
 
 left_column, right_column = st.columns(2)
 with left_column:
-    st.subheader("Monthly net dividend income")
+    with st.container(border=True):
+        st.markdown("### Monthly net income")
 
-    monthly_net_chart = px.bar(
-        monthly_income,
-        x="month",
-        y="net_dividends",
-        labels= {"month": "Month", "net_dividends": "Net dividends (€)"},
-        color_discrete_sequence=["#4CAF50"],
-    )
-    monthly_net_chart.update_layout(
-        xaxis_title=None,
-        yaxis_title="Net dividends (€)",
-        showlegend=False,
-        margin=dict(l=0, r=0, t=20, b=0),
-    )
-    st.plotly_chart(monthly_net_chart, use_container_width=True)
+        st.caption(
+            "Net dividend income received each month "
+            "after taxes."
+        )
+        monthly_net_chart = px.bar(
+            monthly_income,
+            x="month",
+            y="net_dividends",
+            labels= {"month": "Month", "net_dividends": "Net dividends (€)"},
+            color_discrete_sequence=["#4CAF50"],
+        )
+        monthly_net_chart.update_layout(
+            showlegend=False,
+        )
+        monthly_net_chart.update_yaxes(
+            tickprefix="€",
+            tickformat=",.0f",
+        )
+
+        monthly_net_chart = style_chart(monthly_net_chart, height=400)
+        st.plotly_chart(monthly_net_chart, use_container_width=True, config={"displayModeBar": False},)
 
 with right_column:
-    st.subheader("Gross Dividends vs. taxes")
-
-    monthly_gross_tax_chart = px.bar(
-        monthly_income,
-        x="month",
-        y=["gross_dividends", "taxes_paid"],
-        barmode="group",
-        labels={
-            "month": "Month",
-            "value": "Amount (€)",
-            "variable": "Metric",
-        },
-        color_discrete_map={
-            "gross_dividends": "#2196F3",
-            "taxes_paid": "#F44336",
-        },
-    )
-    monthly_gross_tax_chart.update_layout(
-        xaxis_title=None,
-        yaxis_title="Amount (€)",
-        legend_title=None,
-        margin=dict(l=0, r=0, t=20, b=0),
-    )
-    monthly_gross_tax_chart.for_each_trace(
-        lambda trace: trace.update(
-            name="Gross dividends" if trace.name == "gross_dividends" else "Taxes paid"
+    with st.container(border=True):
+        st.markdown("### Gross dividends vs taxes")
+        st.caption(
+            "Compare gross dividend income with taxes "
+            "paid each month."
         )
-    )
-    st.plotly_chart(monthly_gross_tax_chart, use_container_width=True)
+
+        monthly_gross_tax_chart = px.bar(
+            monthly_income,
+            x="month",
+            y=["gross_dividends", "taxes_paid"],
+            barmode="group",
+            labels={
+                "month": "Month",
+                "value": "Amount (€)",
+                "variable": "Metric",
+            },
+            color_discrete_map={
+                "gross_dividends": "#4c8dff",
+                "taxes_paid": "#ff647c",
+            },
+        )
+        monthly_gross_tax_chart.for_each_trace(
+            lambda trace: trace.update(
+                name="Gross dividends" if trace.name == "gross_dividends" else "Taxes paid"
+            )
+        )
+        monthly_gross_tax_chart = style_chart(monthly_gross_tax_chart, height=400)
+        st.plotly_chart(monthly_gross_tax_chart, use_container_width=True)
 
 asset_summary = (
     filtered_dividends.groupby(["name", "symbol"], as_index=False)
@@ -168,54 +217,90 @@ asset_summary["average_payment"] = (
     asset_summary["net_dividends"] / asset_summary["payments"]
 )
 
-left_column, right_column = st.columns([0.6, 0.4])
+st.markdown(
+    '<div class="section-label">INCOME SOURCES</div>',
+    unsafe_allow_html=True,
+)
+
+left_column, right_column = st.columns([1.25,1])
 
 with left_column:
-    st.subheader("Top dividend-paying assets")
+    with st.container(border=True):
+        st.markdown("### Top dividend-paying assets")
+        st.caption(
+            "Assets contributing the most net dividend income."
+        )
+        top_assets = asset_summary.head(5).sort_values("net_dividends")
 
-    top_assets = asset_summary.head(5).sort_values("net_dividends")
-
-    top_assets_chart = px.bar(
-        top_assets,
-        x="net_dividends",
-        y="name",
-        orientation="h",
-        labels={"net_dividends": "Net dividends (€)", "name": "Asset"},
-        color="net_dividends",
-        color_continuous_scale="Greens",
-    )
-    top_assets_chart.update_layout(
-        coloraxis_showscale=False,
-        yaxis_title=None,
-        xaxis_title="Net dividends (€)",
-        margin=dict(l=0, r=0, t=20, b=0),
-    )
-    st.plotly_chart(top_assets_chart, use_container_width=True)
+        top_assets_chart = px.bar(
+            top_assets,
+            x="net_dividends",
+            y="name",
+            orientation="h",
+            labels={"net_dividends": "Net dividends (€)", "name": "Asset"},
+            color_discrete_sequence=["#32c48d"],
+        )
+        top_assets_chart.update_xaxes(tickprefix="€", tickformat=",.0f",)
+        top_assets_chart = style_chart(
+            top_assets_chart,
+            height=320,
+        )
+        st.plotly_chart(top_assets_chart, use_container_width=True,
+            config={"displayModeBar": False},)
 
 with right_column:
-    st.subheader("Income distribution")
+    with st.container(border=True):
+        st.markdown("### Income distribution")
+        st.caption(
+            "Share of total net dividend income by asset."
+        )
 
-    distribution_chart = px.pie(
-        asset_summary,
-        names="name",
-        values="net_dividends",
-        hole=0.55,
+        distribution_chart = px.pie(
+            asset_summary,
+            names="name",
+            values="net_dividends",
+            hole=0.68,
+        )
+        distribution_chart.update_traces(
+            textposition="inside",
+            textinfo="percent",
+            hovertemplate="<b>%{label}</b><br>Net dividends: €%{value:,.2f}<extra></extra>",
+        )
+        distribution_chart.update_layout(
+            showlegend=False,
+        )
+        distribution_chart.add_annotation(
+            text=(
+                f"<b>€{total_net:,.2f}</b>"
+                "<br><span style='font-size:11px'>Net income</span>"
+            ),
+            x=0.5,
+            y=0.5,
+            showarrow=False,
+            font=dict(
+                size=15,
+                color="#f5f7fa",
+            ),
     )
-    distribution_chart.update_traces(
-        textposition="inside",
-        textinfo="percent",
-        hovertemplate="<b>%{label}</b><br>Net dividends: €%{value:,.2f}<extra></extra>",
-    )
-    distribution_chart.update_layout(
-        margin=dict(l=0, r=0, t=20, b=0),
-        showlegend=False,
-    )
-    st.plotly_chart(distribution_chart, use_container_width=True)
+        distribution_chart = style_chart(
+            distribution_chart,
+            height=320,
+        )
+        st.plotly_chart(distribution_chart, use_container_width=True)
 
-st.divider()
 
-st.subheader("Dividend income by asset")
-
+st.markdown(
+    """
+    <div class="section-header">
+        <h2>Dividend income by asset</h2>
+        <p>
+            Dividend income, taxes and payment activity
+            for each income-producing asset.
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 display_summary = asset_summary[
     [
         "name",
@@ -259,7 +344,7 @@ st.dataframe(
 )
 
 
-with st.expander("Show raw dividend transactions"):
+with st.expander("View dividend transactions"):
     raw_dividends = filtered_dividends[
         ["date", "name", "symbol", "shares", "amount", "tax", "net_income", "currency"]
     ].sort_values("date", ascending=False)
