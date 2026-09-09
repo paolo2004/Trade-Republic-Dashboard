@@ -1,7 +1,11 @@
 [theme]
 base = "dark"
-primaryColor = "#F63366"
+primaryColor = "#4C8DFF"
+backgroundColor = "#0B0F14"
+secondaryBackgroundColor = "#131A23"
+textColor = "#E6EAF0"
+linkColor = "#73A6FF"
 font = "sans serif"
-
-[logger]
-level = "info"
+baseRadius = "medium"
+borderColor = "#1E2732"
+showSidebarBorder = true

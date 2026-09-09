@@ -11,22 +11,29 @@
         radial-gradient(
             circle at 10% 80%,
             rgba(20, 100, 80, 0.08),
-            transparent 30%
+            transparent 3
         ),
-        #0b0f14;
+        var(--bg-base);    
 }
 
 /* Main content area */
 .main .block-container {
-    padding-top: 2rem;
+    padding-top: 1.25rem;
     padding-bottom: 3rem;
     max-width: 1500px;
 }
 
-/* Add spacing after major elements */
-[data-testid="stMetric"] {
-    margin-bottom: 1rem;
-    padding: 0.5rem 0;
+/* Scoped to the elements that actually animate. A universal `*` transition
+   also animates virtualised dataframe cells, which makes tables feel laggy. */
+[data-testid="stMetric"],
+[data-testid="stExpander"],
+[data-testid="stFileUploader"],
+[data-testid="stAlert"],
+.feature-card {
+    transition:
+        background var(--ease),
+        border-color var(--ease),
+        transform var(--ease);
 }
 
 /* =========================================================
@@ -41,8 +48,8 @@
             rgba(76, 141, 255, 0.12),
             rgba(50, 196, 141, 0.04)
         );
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 20px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
 }
 
 .header h1 {
@@ -54,7 +61,7 @@
 .header p {
     margin: 0;
     max-width: 650px;
-    color: #8b95a5;
+    color: var(--text-muted);
     font-size: 1.05rem;
     line-height: 1.6;
 }
@@ -71,24 +78,27 @@
    METRIC CARDS
    ========================================================= */
 [data-testid="stMetric"] {
-    background:rgba(19, 26, 35, 0.82);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: 1rem;
     padding: 1rem 1.5rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
 }
 
 [data-testid="stMetric"]:hover {
-    background: rgba(22, 30, 40, 0.90);
-    border-color: rgba(76, 141, 255, 0.22);
+    background: var(--bg-card-hover);
+    border-color: var(--border-hover);
     transform: translateY(-1px);
 }
 
 [data-testid="stMetricLabel"] {
-    color: #9ca3af;
+    color: var(--text-secondary);
     font-size: 0.85rem;
 }
+
+/* Proportional figures on purpose: tabular-nums makes large standalone
+   numbers look loose. Equal-width digits belong in tables, below. */
 [data-testid="stMetricValue"] {
     font-size: 1.55rem;
     font-weight: 600;
@@ -100,9 +110,8 @@
 [data-testid="stFileUploader"] {
     background: linear-gradient(135deg, rgba(30, 90, 140, 0.15), rgba(25, 31, 40, 0.75));
     border: 2px dashed rgba(100, 150, 200, 0.5);
-    border-radius: 14px;
+    border-radius: var(--radius-md);
     padding: 20px;
-    transition: all 0.3s ease;
 }
 
 [data-testid="stFileUploader"]:hover {
@@ -114,29 +123,23 @@
    INFO / SUCCESS BOXES
    ========================================================= */
 [data-testid="stAlert"] {
-    border-radius: 10px;
+    border-radius: var(--radius-sm);
     border-left: 4px solid rgba(100, 150, 200, 0.6);
     backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
 }
 
 /* =========================================================
    EXPANDER
    ========================================================= */
 [data-testid="stExpander"] {
-    border: 1px solid rgba(100, 150, 200, 0.2);
-    border-radius: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
     background: rgba(18, 23, 30, 0.8);
-    transition: all 0.3s ease;
 }
 
 [data-testid="stExpander"]:hover {
-    border-color: rgba(100, 150, 200, 0.4);
-    background: rgba(25, 31, 40, 0.9);
-}
-
-* {
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    border-color: var(--border-hover);
+    background: var(--bg-card-hover);
 }
 
 /* =========================================================
@@ -147,18 +150,14 @@
     padding: 1.25rem;
     margin-bottom: 1rem;
     background: rgba(18, 24, 32, 0.78);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 14px;
-    transition:
-        transform 160ms ease,
-        border-color 160ms ease,
-        background 160ms ease;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
 }
 
 .feature-card:hover {
     transform: translateY(-2px);
-    background: rgba(22, 30, 40, 0.92);
-    border-color: rgba(76, 141, 255, 0.22);
+    background: var(--bg-card-hover);
+    border-color: var(--border-hover);
 }
 
 .feature-icon {
@@ -173,8 +172,75 @@
 }
 
 .feature-description {
-    color: #8b95a5;
-
+    color: var(--text-muted);
     font-size: .88rem;
     line-height: 1.5;
+}
+
+/* =========================================================
+   DATAFRAME TABLES
+   ========================================================= */
+[data-testid="stDataFrame"] {
+    font-variant-numeric: tabular-nums;
+}
+
+/* =========================================================
+   SECTION HEADERS
+   ========================================================= */
+.section-label {
+    margin-top: 0.8rem;
+    margin-bottom: 0.6rem;
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    font-weight: 650;
+    letter-spacing: 0.10em;
+}
+
+.section-header {
+    margin-top: 1.8rem;
+    margin-bottom: 0.8rem;
+}
+
+.section-header h2 {
+    margin: 0.15rem 0 0.25rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.section-header p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+}
+
+/* =========================================================
+   BORDERED SECTIONS / CHART CARDS
+   ========================================================= */
+[data-testid="stVerticalBlockBorderWrapper"] {
+    background: rgba(18, 24, 32, 0.72);
+    border: 1px solid var(--border) !important;
+    border-radius: 16px !important;
+    padding: 0.35rem;
+}
+
+[data-testid="stVerticalBlockBorderWrapper"] h3 {
+    font-size: 1rem;
+    margin-bottom: 0;
+}
+
+[data-testid="stVerticalBlockBorderWrapper"] p {
+    color: var(--text-muted);
+}
+
+
+.section-header h2 {
+    margin: 0.15rem 0 0.25rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.section-header p {
+    margin: 0;
+    color: #7f8998;
+    font-size: 0.88rem;
 }

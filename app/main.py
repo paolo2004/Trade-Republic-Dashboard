@@ -1,9 +1,11 @@
+from pathlib import Path
+
 import streamlit as st
 from PIL import Image
 from utils.import_data import load_data
-from pathlib import Path
+from utils.styling import setup_page
 
-st.set_page_config(page_title="Home", layout="wide")
+setup_page("Home", "🏠")
 image = Image.open("assets/logo.webp")
 image = image.resize((120, 80))
 
@@ -18,13 +20,6 @@ def feature_card(icon, title, description):
         """,
         unsafe_allow_html=True,
     )
-
-# =========================================================
-# LOAD CUSTOM CSS
-# =========================================================
-CSS_FILE = Path(__file__).resolve().parent / "styles" / "main.css"
-with open(CSS_FILE, "r", encoding="utf-8") as f:
-    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 DEMO_FILE = Path(__file__).resolve().parent.parent / "assets" / "demo_transactions.csv"
 
@@ -155,10 +150,18 @@ if df is not None and not df.empty:
     )
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Transactions", len(df), help="Total number of transactions in the imported dataset.")
+        st.metric(
+            "Transactions",
+            len(df),
+            help="Total number of transactions in the imported dataset.",
+        )
     with col2:
         invested = abs(df.loc[df["type"].isin(["BUY", "SELL"]), "amount"].sum())
-        st.metric("Total invested", f"€{invested:,.2f}", help="Total amount invested in the portfolio.")
+        st.metric(
+            "Total invested",
+            f"€{invested:,.2f}",
+            help="Total amount invested in the portfolio.",
+        )
     with col3:
         assets = df.loc[df ["type"] == "BUY", "name"].nunique()
         st.metric("Assets purchased", assets, help="Number of unique assets purchased.")
@@ -174,8 +177,8 @@ if df is not None and not df.empty:
         "dividends, expenses, and asset allocation."
     )
 
-    with st.expander("Show raw transaction data"):
-     st.dataframe(df, use_container_width=True, hide_index=True)
+    with st.expander("View transaction data"):
+        st.dataframe(df, width="stretch", hide_index=True)
 
 else:
     st.info("Please upload a Trade Republic export file.")

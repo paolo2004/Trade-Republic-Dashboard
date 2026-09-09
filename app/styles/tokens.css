@@ -1,0 +1,28 @@
+:root {
+    /* Surfaces */
+    --bg-base:       #0b0f14;
+    --bg-card:       rgba(19, 26, 35, 0.82);
+    --bg-card-hover: rgba(22, 30, 40, 0.92);
+
+    /* Lines */
+    --border:       rgba(255, 255, 255, 0.07);
+    --border-hover: rgba(76, 141, 255, 0.28);
+
+    /* Text — exactly three steps. All clear 4.5:1 on the card surface. */
+    --text-primary:   #e6eaf0;
+    --text-secondary: #9aa4b2;   /* 7.26:1 */
+    --text-muted:     #7f8998;   /* 5.17:1 — do not go darker */
+
+    /* Semantic (P/L, deltas) */
+    --accent:   #4c8dff;
+    --positive: #32c48d;
+    --negative: #ff647c;
+    --midpoint: #64748b;
+
+    /* Rhythm */
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+    --ease: 160ms cubic-bezier(0.2, 0, 0.2, 1);
+}

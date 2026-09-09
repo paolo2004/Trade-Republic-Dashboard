@@ -1,21 +1,12 @@
+
+import pandas as pd
 import plotly.express as px
 import streamlit as st
-import pandas as pd
+from utils.chart import CATEGORICAL, NEGATIVE, show_chart
 from utils.import_data import check_if_data_loaded, validate_data
-from  pathlib import Path
-from utils.chart import style_chart 
+from utils.styling import setup_page
 
-st.set_page_config(page_title="Dividends", page_icon="💸", layout="wide")
-
-APP_DIR = Path(__file__).resolve().parent.parent
-for css_name in ["main.css", "dividends.css"]:
-    css_file = APP_DIR / "styles" / css_name
-
-    with open(css_file, "r", encoding="utf-8") as f:
-        st.markdown(
-            f"<style>{f.read()}</style>",
-            unsafe_allow_html=True,
-        )
+setup_page("Dividends", "💸")
 
 check_if_data_loaded()
 df = st.session_state["df"]
@@ -158,7 +149,7 @@ with left_column:
             x="month",
             y="net_dividends",
             labels= {"month": "Month", "net_dividends": "Net dividends (€)"},
-            color_discrete_sequence=["#4CAF50"],
+            color_discrete_sequence=[CATEGORICAL[2]],
         )
         monthly_net_chart.update_layout(
             showlegend=False,
@@ -168,8 +159,7 @@ with left_column:
             tickformat=",.0f",
         )
 
-        monthly_net_chart = style_chart(monthly_net_chart, height=400)
-        st.plotly_chart(monthly_net_chart, use_container_width=True, config={"displayModeBar": False},)
+        show_chart(monthly_net_chart, height=400)
 
 with right_column:
     with st.container(border=True):
@@ -190,8 +180,8 @@ with right_column:
                 "variable": "Metric",
             },
             color_discrete_map={
-                "gross_dividends": "#4c8dff",
-                "taxes_paid": "#ff647c",
+                "gross_dividends": CATEGORICAL[0],
+                "taxes_paid": NEGATIVE,
             },
         )
         monthly_gross_tax_chart.for_each_trace(
@@ -199,8 +189,7 @@ with right_column:
                 name="Gross dividends" if trace.name == "gross_dividends" else "Taxes paid"
             )
         )
-        monthly_gross_tax_chart = style_chart(monthly_gross_tax_chart, height=400)
-        st.plotly_chart(monthly_gross_tax_chart, use_container_width=True)
+        show_chart(monthly_gross_tax_chart, height=400)
 
 asset_summary = (
     filtered_dividends.groupby(["name", "symbol"], as_index=False)
@@ -238,15 +227,10 @@ with left_column:
             y="name",
             orientation="h",
             labels={"net_dividends": "Net dividends (€)", "name": "Asset"},
-            color_discrete_sequence=["#32c48d"],
+            color_discrete_sequence=[CATEGORICAL[2]],
         )
         top_assets_chart.update_xaxes(tickprefix="€", tickformat=",.0f",)
-        top_assets_chart = style_chart(
-            top_assets_chart,
-            height=320,
-        )
-        st.plotly_chart(top_assets_chart, use_container_width=True,
-            config={"displayModeBar": False},)
+        show_chart(top_assets_chart, height=320)
 
 with right_column:
     with st.container(border=True):
@@ -255,8 +239,21 @@ with right_column:
             "Share of total net dividend income by asset."
         )
 
+        # A donut stays readable to about six segments, so keep the five
+        # largest payers and fold the rest into a single "Other" slice.
+        distribution = asset_summary[["name", "net_dividends"]].copy()
+        if len(distribution) > 6:
+            tail = distribution.iloc[5:]["net_dividends"].sum()
+            distribution = pd.concat(
+                [
+                    distribution.head(5),
+                    pd.DataFrame([{"name": "Other", "net_dividends": tail}]),
+                ],
+                ignore_index=True,
+            )
+
         distribution_chart = px.pie(
-            asset_summary,
+            distribution,
             names="name",
             values="net_dividends",
             hole=0.68,
@@ -279,14 +276,10 @@ with right_column:
             showarrow=False,
             font=dict(
                 size=15,
-                color="#f5f7fa",
+                color="#e6eaf0",
             ),
     )
-        distribution_chart = style_chart(
-            distribution_chart,
-            height=320,
-        )
-        st.plotly_chart(distribution_chart, use_container_width=True)
+        show_chart(distribution_chart, height=320)
 
 
 st.markdown(
@@ -315,7 +308,7 @@ display_summary = asset_summary[
 
 st.dataframe(
     display_summary,
-    use_container_width=True,
+    width="stretch",
     hide_index=True,
     column_config={
         "name": "Asset",
@@ -351,7 +344,7 @@ with st.expander("View dividend transactions"):
 
     st.dataframe(
         raw_dividends,
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         column_config={
             "date": st.column_config.DateColumn("Date", format="DD MMM YYYY"),

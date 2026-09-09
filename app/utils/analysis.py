@@ -2,6 +2,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 import yfinance as yf
+from utils.chart import show_chart
 from utils.ticker_lookup import _validate_yahoo_ticker
 
 PERIODS = {
@@ -216,8 +217,8 @@ def render_price_chart(history, display_name, currency):
         y="Close",
         labels={"Date": "Date", "Close": f"Price ({currency})"},
     )
-    figure.update_layout(height=500, hovermode="x unified")
-    st.plotly_chart(figure, use_container_width=True)
+    figure.update_layout(hovermode="x unified")
+    show_chart(figure, height=500)
 
 
 def render_metric_group(title, metrics):
@@ -275,7 +276,7 @@ def render_financial_statements(ticker_symbol):
     if statement is None or statement.empty:
         st.info("Financial statement data is not available.")
         return
-    st.dataframe(statement, use_container_width=True)
+    st.dataframe(statement, width="stretch")
 
 def render_crypto_information(info, currency):
     """Render cryptocurrency-specific information."""
@@ -320,7 +321,6 @@ def render_crypto_information(info, currency):
             "Maximum Supply",
             format_large_number(max_supply)
         )
-    st.divider()
 
     render_metric_group(
         "Historical Price Levels",
@@ -343,7 +343,6 @@ def render_crypto_information(info, currency):
             ),
         },
     )
-    st.divider()
 
     render_metric_group(
         "Market Performance",
@@ -362,8 +361,6 @@ def render_crypto_information(info, currency):
             ),
         },
     )
-
-    st.divider()
 
     # --------------------------------------------------
     # Important Links
@@ -436,7 +433,6 @@ def render_fund_information(info, currency):
             "Ticker",
             info.get("symbol", "N/A")
         )
-    st.divider()
 
     st.subheader("Fund Costs & Valuation")
     left_column, right_column = st.columns(2)
@@ -467,7 +463,6 @@ def render_fund_information(info, currency):
                 currency
             )
         )
-    st.divider()
 
     st.subheader("Fund Performance")
     left_column, right_column = st.columns(2)
@@ -500,7 +495,6 @@ def render_fund_information(info, currency):
                 currency
             )
         )
-    st.divider()
 
     st.subheader("Trading Information")
     left_column, right_column = st.columns(2)
@@ -547,7 +541,6 @@ def render_stock_information(info, ticker_symbol, fallback_name):
             "Price/Book": format_number(info.get("priceToBook")),
         },
     )
-    st.markdown("---")
     render_metric_group(
         "Profitability",
         {
@@ -557,7 +550,6 @@ def render_stock_information(info, ticker_symbol, fallback_name):
             "Operating Margin": format_percentage(info.get("operatingMargins")),
         },
     )
-    st.markdown("---")
     render_metric_group(
         "Growth",
         {
@@ -567,7 +559,6 @@ def render_stock_information(info, ticker_symbol, fallback_name):
             "Forward EPS": format_number(info.get("forwardEps")),
         },
     )
-    st.markdown("---")
     render_metric_group(
         "Dividends",
         {
@@ -587,8 +578,17 @@ def render_stock_information(info, ticker_symbol, fallback_name):
 
 def render_asset_analysis_page():
     """Build the complete asset analysis page."""
-    st.title("📈 Asset Analysis")
-    st.write("Get market information and financial metrics for assets in your portfolio.")
+    st.markdown(
+            """
+            <div class="header">
+                <h1>Asset Analysis</h1>
+                <p>
+                    Get market information and financial metrics for assets in your portfolio.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
     portfolio_data = get_portfolio_data()
     assets = get_available_assets(portfolio_data)
     st.markdown("---")
