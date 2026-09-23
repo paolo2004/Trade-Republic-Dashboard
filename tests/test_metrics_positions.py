@@ -134,15 +134,6 @@ class TestOversellAndShortSell:
 
 
 class TestClosedPosition:
-    @pytest.mark.xfail(
-        strict=True,
-        raises=ZeroDivisionError,
-        reason=(
-            "app/utils/metrics.py:144 divides open_cost_basis by open_shares "
-            "directly instead of using the guarded avg_cost_per_share computed "
-            "just above, so a fully sold position crashes."
-        ),
-    )
     def test_selling_out_completely_leaves_no_average_cost(self):
         position = only_position(
             [

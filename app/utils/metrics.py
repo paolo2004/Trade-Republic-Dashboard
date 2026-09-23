@@ -4,6 +4,7 @@ import streamlit as st
 import yfinance as yf
 from utils.analysis import load_ticker_info
 
+
 def get_trades_transactions(df):
     buy_transactions = df[df["type"].isin(["BUY", "SELL"])].copy()
     if buy_transactions.empty:
@@ -141,7 +142,7 @@ def calculate_positions(trades):
                 "ticker": ticker,
                 "open_shares": open_shares,
                 "open_cost_basis": open_cost_basis,
-                "avg_cost_per_share": open_cost_basis / open_shares,
+                "avg_cost_per_share": avg_cost_per_share,
                 "total_purchase_cost": total_purchase_cost,
                 "total_sale_proceeds": total_sale_proceeds,
                 "realised_profit_loss": realised_profit_loss,

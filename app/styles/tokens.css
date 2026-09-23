@@ -1,12 +1,13 @@
 :root {
     /* Surfaces */
-    --bg-base:       #0b0f14;
-    --bg-card:       rgba(19, 26, 35, 0.82);
-    --bg-card-hover: rgba(22, 30, 40, 0.92);
+    --bg-base:       #090d12;
+    --bg-sidebar:    #10151d;
+    --bg-card:       #121923;
+    --bg-card-hover: #18212d;
 
     /* Lines */
-    --border:       rgba(255, 255, 255, 0.07);
-    --border-hover: rgba(76, 141, 255, 0.28);
+    --border:       #222c39;
+    --border-hover: #344254;
 
     /* Text — exactly three steps. All clear 4.5:1 on the card surface. */
     --text-primary:   #e6eaf0;
@@ -14,8 +15,8 @@
     --text-muted:     #7f8998;   /* 5.17:1 — do not go darker */
 
     /* Semantic (P/L, deltas) */
-    --accent:   #4c8dff;
-    --positive: #32c48d;
+    --accent:   #42dca1;
+    --positive: #42dca1;
     --negative: #ff647c;
     --midpoint: #64748b;
 

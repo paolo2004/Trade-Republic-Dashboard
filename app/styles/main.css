@@ -1,246 +1,139 @@
-/* =========================================================
-   GLOBAL
-   ========================================================= */
-.stApp {
-    background:
-        radial-gradient(
-            circle at 80% 10%,
-            rgba(30, 90, 140, 0.12),
-            transparent 35%
-        ),
-        radial-gradient(
-            circle at 10% 80%,
-            rgba(20, 100, 80, 0.08),
-            transparent 3
-        ),
-        var(--bg-base);    
+/* App shell */
+.stApp { background: var(--bg-base); color: var(--text-primary); }
+[data-testid="stMainBlockContainer"] { max-width: 1440px; padding: 2rem 2.25rem 3rem; }
+
+/* Hide the Streamlit chrome, but keep the header so the sidebar can be reopened. */
+[data-testid="stHeader"] { background: transparent; }
+[data-testid="stDecoration"], [data-testid="stToolbarActions"], [data-testid="stAppDeployButton"],
+[data-testid="stMainMenu"], footer { display: none !important; }
+
+/* Sidebar: brand, navigation rail and the data source card pinned to the bottom. */
+[data-testid="stSidebar"] { background: var(--bg-sidebar); border-right: 1px solid var(--border); }
+[data-testid="stSidebarContent"] { display: flex; flex-direction: column; }
+[data-testid="stSidebarHeader"] { height: 2.25rem; min-height: 0; padding-top: .5rem; }
+[data-testid="stSidebarNav"] { padding: 0 1rem; }
+[data-testid="stSidebarNav"]::before {
+    content: "Portfolio";
+    display: flex; align-items: center; height: 32px;
+    margin: 0 .5rem 1.6rem; padding-left: 42px;
+    color: var(--text-primary); font-size: 1.1rem; font-weight: 700; letter-spacing: -.02em;
+    background: no-repeat left center / 32px 32px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2342dca1'/%3E%3Cpath d='M8 21l6-6 4 4 7-7M20 12h5v5' fill='none' stroke='%2307120e' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
+[data-testid="stSidebarNavItems"] { gap: .3rem; }
+[data-testid="stSidebarNavLink"] { min-height: 44px; padding: 0 .85rem; border-radius: var(--radius-sm); }
+[data-testid="stSidebarNavLink"] span { color: var(--text-secondary); font-weight: 600; font-size: .9rem; }
+[data-testid="stSidebarNavLink"]:hover { background: var(--bg-card-hover); }
+[data-testid="stSidebarNavLink"]:hover span,
+[data-testid="stSidebarNavLink"][aria-current="page"] span { color: var(--text-primary); }
+[data-testid="stSidebarNavLink"][aria-current="page"] { background: #1c2531; }
+[data-testid="stSidebarNavSeparator"] { display: none; }
+[data-testid="stSidebarUserContent"] { margin-top: auto; padding: 1rem 1rem 1.25rem; }
 
-/* Main content area */
-.main .block-container {
-    padding-top: 1.25rem;
-    padding-bottom: 3rem;
-    max-width: 1500px;
+.st-key-data_source_card { gap: .9rem; padding: 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); }
+.source-label { color: var(--text-muted); font-size: .68rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; margin-bottom: .75rem; }
+.source-file { display: flex; gap: .7rem; align-items: flex-start; }
+.source-file > div { min-width: 0; }
+.source-icon {
+    flex: none; width: 16px; height: 18px; margin-top: .1rem; background: var(--text-secondary);
+    -webkit-mask: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z'/%3E%3Cpath d='M14 3v5h5'/%3E%3C/svg%3E");
+            mask: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z'/%3E%3Cpath d='M14 3v5h5'/%3E%3C/svg%3E");
 }
+.source-name { color: var(--text-primary); font-size: .86rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.source-detail { color: var(--text-secondary); font-size: .75rem; margin-top: .1rem; }
 
-/* Scoped to the elements that actually animate. A universal `*` transition
-   also animates virtualised dataframe cells, which makes tables feel laggy. */
-[data-testid="stMetric"],
-[data-testid="stExpander"],
-[data-testid="stFileUploader"],
-[data-testid="stAlert"],
-.feature-card {
-    transition:
-        background var(--ease),
-        border-color var(--ease),
-        transform var(--ease);
+/* Typography */
+h1, h2, h3, p { color: var(--text-primary); }
+h1 { font-size: 1.85rem !important; letter-spacing: -.045em; line-height: 1.1; }
+h3 { font-size: 1rem !important; }
+a { color: #8dbdff !important; }
+
+/* Dashboard heading */
+.dashboard-heading { margin: 0; }
+.dashboard-heading .eyebrow { color: var(--text-secondary); font-size: .83rem; margin-bottom: .35rem; }
+.dashboard-heading h1 { margin: 0; padding: 0; }
+.control-label { color: var(--text-muted); font-size: .68rem; font-weight: 700; letter-spacing: .08em; }
+
+/* Buttons: primary is the accent action, secondary an outlined one. */
+button[kind="primary"] { min-height: 44px; border: 0; border-radius: var(--radius-sm); background: var(--accent); color: #07120e; font-weight: 700; }
+button[kind="primary"]:hover, button[kind="primary"]:focus-visible { background: #5be7b2; color: #07120e; }
+button[kind="primary"] p { color: #07120e; }
+button[kind="secondary"] { min-height: 40px; border: 1px solid var(--border-hover); border-radius: var(--radius-sm); background: transparent; font-weight: 600; }
+button[kind="secondary"]:hover { border-color: var(--text-muted); background: var(--bg-card-hover); color: var(--text-primary); }
+
+/* Period switch */
+[data-testid="stButtonGroup"] { justify-content: flex-end; }
+[data-testid="stButtonGroup"] > div { padding: 4px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); gap: 2px; }
+button[kind="segmented_control"], button[kind="segmented_controlActive"] { min-height: 34px; min-width: 46px; border: 0 !important; border-radius: 7px !important; background: transparent; }
+button[kind="segmented_control"] p { color: var(--text-secondary); font-weight: 700; font-size: .8rem; }
+button[kind="segmented_control"]:hover p { color: var(--text-primary); }
+button[kind="segmented_controlActive"] { background: #253041 !important; }
+button[kind="segmented_controlActive"] p { color: var(--text-primary); font-weight: 700; font-size: .8rem; }
+
+/* KPI cards */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin: 1.1rem 0 .5rem; }
+.kpi-card { padding: 1.15rem 1.3rem 1.2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); }
+.kpi-label { color: var(--text-secondary); font-size: .82rem; }
+.kpi-value { margin: .55rem 0 .45rem; color: var(--text-primary); font-size: 1.85rem; font-weight: 700; letter-spacing: -.04em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.kpi-context { color: var(--text-secondary); font-size: .76rem; }
+.kpi-context.positive { color: var(--positive); }
+
+/* Native metrics on the other pages share the card look. */
+[data-testid="stMetric"] { min-height: 132px; padding: 1.15rem 1.25rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); }
+[data-testid="stMetricLabel"] { color: var(--text-secondary); font-size: .8rem; margin-bottom: .6rem; }
+[data-testid="stMetricValue"] { color: var(--text-primary); font-size: 1.78rem; font-weight: 650; letter-spacing: -.045em; }
+[data-testid="stMetricDelta"] { color: var(--accent) !important; font-size: .75rem; }
+
+/* Overview cards */
+.st-key-invested_card, .st-key-allocation_card, .st-key-recent_card { padding: 1.35rem 1.4rem 1.2rem; background: var(--bg-card); border: 1px solid var(--border) !important; border-radius: var(--radius-md) !important; }
+.card-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.card-header h3, .card-title { margin: 0; padding: 0; font-size: 1rem !important; font-weight: 700; }
+.legend { display: flex; gap: 1rem; }
+.legend-item { display: inline-flex; align-items: center; gap: .45rem; color: var(--text-secondary); font-size: .76rem; }
+.legend-item i { width: 10px; height: 3px; border-radius: 2px; }
+.legend-item i.dashed { height: 0; border-top: 2px dashed; }
+[data-testid="stElementContainer"]:has(> [data-testid="stPageLink"]) { width: 100%; }
+[data-testid="stPageLink"] { display: flex; justify-content: flex-end; }
+[data-testid="stPageLink-NavLink"] { justify-content: flex-end; padding: 0; background: transparent !important; }
+[data-testid="stPageLink-NavLink"] span, [data-testid="stPageLink-NavLink"] p { color: #8dbdff; font-size: .85rem; text-decoration: underline; text-underline-offset: 3px; }
+
+ul.allocation-legend { width: 100% !important; list-style: none; margin: 0; padding: 0; }
+.allocation-legend li { display: flex; align-items: center; gap: .6rem; margin: 0; padding: .3rem 0; color: var(--text-primary); font-size: .86rem; }
+.allocation-legend i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.allocation-legend span { margin-left: auto; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.st-key-allocation_card > :last-child { margin-top: auto; }
+.card-footer { padding-top: 1rem; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: .84rem; }
+.card-footer strong { color: var(--text-primary); font-weight: 600; }
+.card-footer .muted { color: var(--text-muted); font-size: .75rem; }
+
+/* Recent activity */
+.activity-table { width: 100%; border: 0; border-collapse: collapse; font-size: .86rem; }
+.activity-table th, .activity-table td { border-left: 0 !important; border-right: 0 !important; border-top: 0 !important; background: transparent !important; }
+.activity-table th { padding: .7rem 0; border-bottom: 1px solid var(--border); color: var(--text-muted); text-align: left; font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.activity-table td { padding: .85rem 0; color: var(--text-secondary); border: 0; }
+.activity-table tr:not(:last-child) td { border-bottom: 1px solid rgba(255, 255, 255, .03); }
+.activity-table td:last-child, .activity-table th:last-child { text-align: right; }
+.activity-table .asset, .activity-table .amount { color: var(--text-primary); font-weight: 600; }
+.activity-table .amount { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.activity-table .amount.positive { color: var(--positive); }
+.asset-initial { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 7px; margin-right: 10px; background: #202a37; color: #b6c2d4; font-size: .68rem; font-weight: 700; }
+.tag { display: inline-block; white-space: nowrap; border-radius: 999px; padding: .23rem .6rem; font-size: .72rem; font-weight: 700; }
+.tag-buy { background: #273241; color: #c2cedd; }
+.tag-plan { background: #1c2f4d; color: #8dbdff; }
+.tag-dividend { background: #123b31; color: #50e1aa; }
+.tag-sell { background: #422431; color: #ff9dae; }
+.tag-neutral { background: #1f2630; color: var(--text-secondary); }
+
+/* Other pages */
+[data-testid="stSelectbox"] > div > div { background: #161e29; border: 1px solid var(--border); border-radius: 10px; }
+.section-label { color: var(--text-muted); font-size: .72rem; font-weight: 700; letter-spacing: .09em; margin: 1.25rem 0 .55rem; }
+.header, .hero-badge { display: none; }
+
+@media (max-width: 1100px) {
+    .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-
-/* =========================================================
-   TITLE
-   ========================================================= */
-.header {
-    padding: 2.5rem 2.75rem;
-    margin-bottom: 1.5rem;
-    background:
-        linear-gradient(
-            135deg,
-            rgba(76, 141, 255, 0.12),
-            rgba(50, 196, 141, 0.04)
-        );
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-}
-
-.header h1 {
-    margin: 0.4rem 0 0.6rem 0;
-    font-size: 2rem;
-    letter-spacing: -0.04em;
-}
-
-.header p {
-    margin: 0;
-    max-width: 650px;
-    color: var(--text-muted);
-    font-size: 1.05rem;
-    line-height: 1.6;
-}
-
-.hero-badge {
-    text-align: center;
-    font-size: 2.2rem;
-    font-weight: 600;
-    letter-spacing: 0.10em;
-    color: #73a6ff;
-}
-
-/* =========================================================
-   METRIC CARDS
-   ========================================================= */
-[data-testid="stMetric"] {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    margin-bottom: 1rem;
-    padding: 1rem 1.5rem;
-    box-shadow: var(--shadow);
-}
-
-[data-testid="stMetric"]:hover {
-    background: var(--bg-card-hover);
-    border-color: var(--border-hover);
-    transform: translateY(-1px);
-}
-
-[data-testid="stMetricLabel"] {
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-}
-
-/* Proportional figures on purpose: tabular-nums makes large standalone
-   numbers look loose. Equal-width digits belong in tables, below. */
-[data-testid="stMetricValue"] {
-    font-size: 1.55rem;
-    font-weight: 600;
-}
-
-/* =========================================================
-   FILE UPLOADER
-   ========================================================= */
-[data-testid="stFileUploader"] {
-    background: linear-gradient(135deg, rgba(30, 90, 140, 0.15), rgba(25, 31, 40, 0.75));
-    border: 2px dashed rgba(100, 150, 200, 0.5);
-    border-radius: var(--radius-md);
-    padding: 20px;
-}
-
-[data-testid="stFileUploader"]:hover {
-    border-color: rgba(100, 150, 200, 0.8);
-    background: linear-gradient(135deg, rgba(30, 90, 140, 0.25), rgba(25, 31, 40, 0.85));
-}
-
-/* =========================================================
-   INFO / SUCCESS BOXES
-   ========================================================= */
-[data-testid="stAlert"] {
-    border-radius: var(--radius-sm);
-    border-left: 4px solid rgba(100, 150, 200, 0.6);
-    backdrop-filter: blur(10px);
-}
-
-/* =========================================================
-   EXPANDER
-   ========================================================= */
-[data-testid="stExpander"] {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: rgba(18, 23, 30, 0.8);
-}
-
-[data-testid="stExpander"]:hover {
-    border-color: var(--border-hover);
-    background: var(--bg-card-hover);
-}
-
-/* =========================================================
-   FEATURE CARDS
-   ========================================================= */
-.feature-card {
-    height: 155px;
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-    background: rgba(18, 24, 32, 0.78);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-}
-
-.feature-card:hover {
-    transform: translateY(-2px);
-    background: var(--bg-card-hover);
-    border-color: var(--border-hover);
-}
-
-.feature-icon {
-    font-size: 1.35rem;
-    margin-bottom: .75rem;
-}
-
-.feature-title {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: .35rem;
-}
-
-.feature-description {
-    color: var(--text-muted);
-    font-size: .88rem;
-    line-height: 1.5;
-}
-
-/* =========================================================
-   DATAFRAME TABLES
-   ========================================================= */
-[data-testid="stDataFrame"] {
-    font-variant-numeric: tabular-nums;
-}
-
-/* =========================================================
-   SECTION HEADERS
-   ========================================================= */
-.section-label {
-    margin-top: 0.8rem;
-    margin-bottom: 0.6rem;
-    color: var(--text-primary);
-    font-size: 0.8rem;
-    font-weight: 650;
-    letter-spacing: 0.10em;
-}
-
-.section-header {
-    margin-top: 1.8rem;
-    margin-bottom: 0.8rem;
-}
-
-.section-header h2 {
-    margin: 0.15rem 0 0.25rem 0;
-    font-size: 1.25rem;
-    font-weight: 600;
-}
-
-.section-header p {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: 0.88rem;
-}
-
-/* =========================================================
-   BORDERED SECTIONS / CHART CARDS
-   ========================================================= */
-[data-testid="stVerticalBlockBorderWrapper"] {
-    background: rgba(18, 24, 32, 0.72);
-    border: 1px solid var(--border) !important;
-    border-radius: 16px !important;
-    padding: 0.35rem;
-}
-
-[data-testid="stVerticalBlockBorderWrapper"] h3 {
-    font-size: 1rem;
-    margin-bottom: 0;
-}
-
-[data-testid="stVerticalBlockBorderWrapper"] p {
-    color: var(--text-muted);
-}
-
-
-.section-header h2 {
-    margin: 0.15rem 0 0.25rem 0;
-    font-size: 1.25rem;
-    font-weight: 600;
-}
-
-.section-header p {
-    margin: 0;
-    color: #7f8998;
-    font-size: 0.88rem;
+@media (max-width: 640px) {
+    [data-testid="stMainBlockContainer"] { padding: 1.25rem 1rem 2rem; }
+    .kpi-grid { grid-template-columns: 1fr; }
+    .kpi-value { font-size: 1.55rem; }
+    .activity-table th:nth-child(3), .activity-table td:nth-child(3) { display: none; }
 }
