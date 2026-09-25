@@ -119,11 +119,9 @@ if open_positions["ticker"].notna().all():
 # Current value per position: latest close where there is one, cost basis otherwise.
 latest_prices = prices.ffill().iloc[-1] if not prices.empty else pd.Series(dtype=float)
 open_positions["price"] = open_positions["ticker"].map(latest_prices)
-st.write(open_positions)
 open_positions["value"] = (open_positions["open_shares"] * open_positions["price"]).fillna(
     open_positions["open_cost_basis"]
 )
-st.write(open_positions["value"].sum())
 unpriced_positions = int(open_positions["price"].isna().sum())
 
 in_period = df.loc[df["date"] >= start]
