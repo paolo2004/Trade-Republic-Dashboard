@@ -4,10 +4,13 @@ import pytest
 from utils.overview import (
     activity_label,
     allocation_by_class,
+    cash_balance,
     holdings_timeline,
     invested_capital_timeline,
     market_value_timeline,
+    net_invested,
     period_start,
+    total_invested,
 )
 
 
@@ -117,3 +120,28 @@ def test_activity_label(transaction_type, description, expected):
     transaction = pd.Series({"type": transaction_type, "description": description})
 
     assert activity_label(transaction) == expected
+
+
+def test_net_invested_counts_fees_and_taxes():
+    trades = make_trades(
+        [
+            ("2024-01-01", "BUY", "AAA", 1.0, -350.0, -0.99),
+            ("2024-02-01", "SELL", "AAA", 1.0, 1000.0, -1.0),
+        ]
+    )
+    trades.loc[1, "tax"] = -50.0
+
+    assert net_invested(trades).tolist() == [350.99, -949.0]
+    assert total_invested(trades) == pytest.approx(350.99 - 949.0)
+
+
+def test_cash_balance_sums_every_cash_movement():
+    transactions = pd.DataFrame(
+        {
+            "amount": [1000.0, -350.0, 12.0, -40.0],
+            "fee": [0.0, -1.0, 0.0, 0.0],
+            "tax": [0.0, 0.0, -3.0, 0.0],
+        }
+    )
+
+    assert cash_balance(transactions) == pytest.approx(618.0)

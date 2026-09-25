@@ -9,6 +9,7 @@ from utils.metrics import calculate_positions, get_trades_transactions
 from utils.overview import (
     activity_label,
     allocation_by_class,
+    cash_balance,
     get_price_history,
     holdings_timeline,
     invested_capital_timeline,
@@ -50,6 +51,11 @@ def kpi_card(label, value, context, tone=""):
     )
 
 
+def share_label(share):
+    """Percent of the portfolio; a sliver like a small cash balance reads "<1%", not "0%"."""
+    return "<1%" if 0 < share < 0.005 else f"{share:.0%}"
+
+
 def initials(name):
     words = [word for word in name.replace("-", " ").split() if word[0].isalnum()]
     return "".join(word[0] for word in words[:2]).upper() or "·"
@@ -63,8 +69,13 @@ df = df.dropna(subset=["date"]).sort_values("date")
 earliest_date, latest_date = df["date"].min(), df["date"].max()
 
 # ---------------------------------------------------------------- header
-heading, period_col, import_col = st.columns([3.2, 1.25, 0.75], vertical_alignment="center")
-with period_col:
+# The controls sit in a horizontal container at their natural width, so they
+# never squeeze or wrap their labels on mid-sized screens.
+heading, controls = st.columns([1, 1.2], vertical_alignment="center")
+with (
+    controls,
+    st.container(horizontal=True, horizontal_alignment="right", vertical_alignment="center"),
+):
     period = (
         st.segmented_control(
             "Period",
@@ -72,11 +83,11 @@ with period_col:
             default="All",
             key="overview_period",
             label_visibility="collapsed",
+            width="content",
         )
         or "All"
     )
-with import_col:
-    if st.button("Import CSV", type="primary", icon=":material/upload:", width="stretch"):
+    if st.button("Import CSV", type="primary", icon=":material/upload:", width="content"):
         import_dialog()
 
 start = period_start(period, earliest_date, latest_date)
@@ -108,9 +119,11 @@ if open_positions["ticker"].notna().all():
 # Current value per position: latest close where there is one, cost basis otherwise.
 latest_prices = prices.ffill().iloc[-1] if not prices.empty else pd.Series(dtype=float)
 open_positions["price"] = open_positions["ticker"].map(latest_prices)
+st.write(open_positions)
 open_positions["value"] = (open_positions["open_shares"] * open_positions["price"]).fillna(
     open_positions["open_cost_basis"]
 )
+st.write(open_positions["value"].sum())
 unpriced_positions = int(open_positions["price"].isna().sum())
 
 in_period = df.loc[df["date"] >= start]
@@ -120,6 +133,10 @@ trailing_dividends = net_cash_flow(
     dividends.loc[dividends["date"] > latest_date - pd.DateOffset(years=1)]
 ).sum()
 cost_basis = open_positions["open_cost_basis"].sum()
+cash = cash_balance(df)
+holdings_value = open_positions["value"].sum()
+portfolio_value = holdings_value + max(cash, 0)
+unrealised = holdings_value - cost_basis
 months_in_period = max((latest_date - start).days / 30.44, 1)
 asset_classes = open_positions["asset_class"].nunique()
 
@@ -132,11 +149,25 @@ if period_dividends > 0 and cost_basis > 0:
 else:
     dividend_context, dividend_tone = "No dividends in this period", ""
 
+if unpriced_positions == len(open_positions):
+    value_context, value_tone = "No prices available, valued at cost", ""
+else:
+    change = unrealised / cost_basis if cost_basis else 0
+    value_context = f"{eur(unrealised, signed=True)} ({change:+.1%}) unrealised"
+    value_tone = "positive" if unrealised >= 0 else "negative"
+    if unpriced_positions:
+        value_context += f" · {unpriced_positions} at cost"
+
+if cash >= 0:
+    cash_context, cash_tone = f"Uninvested on {latest_date:%d %b %Y}", ""
+else:
+    # A negative balance is impossible on the account itself, so the export is partial.
+    cash_context, cash_tone = "Export may not start at account opening", "negative"
+
 st.markdown(
     '<div class="kpi-grid">'
-    + kpi_card(
-        "Total invested", eur(invested.iloc[-1]), f"Net of sales since {earliest_date:%b %Y}"
-    )
+    + kpi_card("Portfolio value", eur(portfolio_value), value_context, value_tone)
+    + kpi_card("Cash", eur(cash), cash_context, cash_tone)
     + kpi_card("Dividends received", eur(period_dividends), dividend_context, dividend_tone)
     + kpi_card(
         "Assets held",
@@ -231,8 +262,7 @@ with allocation_col, st.container(border=True, key="allocation_card", height="st
     title_col.markdown("<h3 class='card-title'>Allocation</h3>", unsafe_allow_html=True)
     link_col.page_link("pages/2_🥧_Allocation.py", label="Details")
 
-    cash_balance = net_cash_flow(df).sum()
-    allocation = allocation_by_class(open_positions, cash_balance)
+    allocation = allocation_by_class(open_positions, cash)
     extra_colors = iter(EXTRA_SLICE_COLORS * 3)
     allocation["color"] = [
         SLICE_COLORS.get(label) or next(extra_colors) for label in allocation["label"]
@@ -259,7 +289,7 @@ with allocation_col, st.container(border=True, key="allocation_card", height="st
     with legend_col:
         items = "".join(
             f'<li><i style="background:{row.color}"></i>{html.escape(row.label)}'
-            f"<span>{row.share:.0%}</span></li>"
+            f"<span>{share_label(row.share)}</span></li>"
             for row in allocation.itertuples()
         )
         st.markdown(f'<ul class="allocation-legend">{items}</ul>', unsafe_allow_html=True)

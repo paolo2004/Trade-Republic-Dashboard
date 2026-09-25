@@ -56,13 +56,14 @@ a { color: #8dbdff !important; }
 /* Buttons: primary is the accent action, secondary an outlined one. */
 button[kind="primary"] { min-height: 44px; border: 0; border-radius: var(--radius-sm); background: var(--accent); color: #07120e; font-weight: 700; }
 button[kind="primary"]:hover, button[kind="primary"]:focus-visible { background: #5be7b2; color: #07120e; }
-button[kind="primary"] p { color: #07120e; }
+button[kind="primary"] { padding: 0 1.25rem; }
+button[kind="primary"] p { color: #07120e; white-space: nowrap; }
 button[kind="secondary"] { min-height: 40px; border: 1px solid var(--border-hover); border-radius: var(--radius-sm); background: transparent; font-weight: 600; }
 button[kind="secondary"]:hover { border-color: var(--text-muted); background: var(--bg-card-hover); color: var(--text-primary); }
 
 /* Period switch */
 [data-testid="stButtonGroup"] { justify-content: flex-end; }
-[data-testid="stButtonGroup"] > div { padding: 4px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); gap: 2px; }
+[data-testid="stButtonGroup"] > div { flex-wrap: nowrap; padding: 4px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); gap: 2px; }
 button[kind="segmented_control"], button[kind="segmented_controlActive"] { min-height: 34px; min-width: 46px; border: 0 !important; border-radius: 7px !important; background: transparent; }
 button[kind="segmented_control"] p { color: var(--text-secondary); font-weight: 700; font-size: .8rem; }
 button[kind="segmented_control"]:hover p { color: var(--text-primary); }
@@ -70,12 +71,13 @@ button[kind="segmented_controlActive"] { background: #253041 !important; }
 button[kind="segmented_controlActive"] p { color: var(--text-primary); font-weight: 700; font-size: .8rem; }
 
 /* KPI cards */
-.kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin: 1.1rem 0 .5rem; }
+.kpi-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1rem; margin: 1.1rem 0 .5rem; }
 .kpi-card { padding: 1.15rem 1.3rem 1.2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); }
 .kpi-label { color: var(--text-secondary); font-size: .82rem; }
-.kpi-value { margin: .55rem 0 .45rem; color: var(--text-primary); font-size: 1.85rem; font-weight: 700; letter-spacing: -.04em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.kpi-value { margin: .55rem 0 .45rem; color: var(--text-primary); font-size: clamp(1.4rem, 1.75vw, 1.85rem); font-weight: 700; letter-spacing: -.04em; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .kpi-context { color: var(--text-secondary); font-size: .76rem; }
 .kpi-context.positive { color: var(--positive); }
+.kpi-context.negative { color: var(--negative); }
 
 /* Native metrics on the other pages share the card look. */
 [data-testid="stMetric"] { min-height: 132px; padding: 1.15rem 1.25rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); }
@@ -129,10 +131,13 @@ ul.allocation-legend { width: 100% !important; list-style: none; margin: 0; padd
 
 @media (max-width: 1100px) {
     .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    /* Five cards in two columns: let the last one fill its row. */
+    .kpi-card:last-child { grid-column: 1 / -1; }
 }
 @media (max-width: 640px) {
     [data-testid="stMainBlockContainer"] { padding: 1.25rem 1rem 2rem; }
     .kpi-grid { grid-template-columns: 1fr; }
+    .kpi-card:last-child { grid-column: auto; }
     .kpi-value { font-size: 1.55rem; }
     .activity-table th:nth-child(3), .activity-table td:nth-child(3) { display: none; }
 }

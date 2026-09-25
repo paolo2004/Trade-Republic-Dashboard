@@ -37,16 +37,36 @@ def net_cash_flow(transactions):
     return transactions["amount"] + transactions["fee"] + transactions["tax"]
 
 
-def invested_capital_timeline(trades, end_date=None):
-    """Daily net invested capital: buy costs minus net sale proceeds, fees included.
+def net_invested(trades):
+    """Capital each trade put into (+) or took out of (-) the portfolio.
 
-    Buys have a negative cash flow and sells a positive one, so the running
-    sum of the negated flows is the capital still invested.
+    This is the app's single definition of "invested": buys count with their
+    fees, sales count with what actually came back after fees and taxes.
+    Buys have a negative cash flow and sells a positive one, hence the negation.
     """
+    return -net_cash_flow(trades)
+
+
+def total_invested(trades):
+    """Net invested capital across all trades."""
+    return net_invested(trades).sum()
+
+
+def cash_balance(transactions):
+    """Uninvested cash: the sum of every cash movement in the export.
+
+    Only correct when the export starts at account opening; a partial export
+    misses the earlier movements.
+    """
+    return net_cash_flow(transactions).sum()
+
+
+def invested_capital_timeline(trades, end_date=None):
+    """Daily running total of `net_invested`, one row per calendar day."""
     if trades.empty:
         return pd.Series(dtype=float)
 
-    daily = (-net_cash_flow(trades)).groupby(trades["date"].dt.normalize()).sum()
+    daily = net_invested(trades).groupby(trades["date"].dt.normalize()).sum()
     end_date = pd.Timestamp(end_date or daily.index.max()).normalize()
     days = pd.date_range(daily.index.min(), max(end_date, daily.index.max()), freq="D")
     return daily.reindex(days, fill_value=0).cumsum()

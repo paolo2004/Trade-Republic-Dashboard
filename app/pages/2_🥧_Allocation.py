@@ -10,6 +10,7 @@ from utils.metrics import (
     calculate_sector_allocation,
     get_trades_transactions,
 )
+from utils.overview import net_invested, total_invested
 from utils.styling import setup_page
 
 setup_page("Portfolio Allocation", "🥧")
@@ -22,20 +23,22 @@ trade_transactions = get_trades_transactions(df)
 
 # Use a share-weighted price because buy orders can contain different quantities.
 trade_transactions["trade_value"] = trade_transactions["price"] * trade_transactions["shares"]
+trade_transactions["net_invested"] = net_invested(trade_transactions)
 
 st.markdown('<div class="section-label">ALLOCATION SUMMARY</div>', unsafe_allow_html=True)
 
 cel1, cel2, cel3 = st.columns(3)
-# Negated because buys are negative amounts in the export.
-cel1.metric("Total invested", f"€{-trade_transactions['amount'].sum():,.2f}")
+cel1.metric("Total invested", f"€{total_invested(trade_transactions):,.2f}")
 cel2.metric("Trade transactions", f"{len(trade_transactions):,}")
 cel3.metric("Unique assets", f"{trade_transactions['name'].nunique():,}")
 
+# dropna=False keeps assets whose ticker lookup failed; they still hold invested capital.
 allocation_by_asset = trade_transactions.groupby(
     ["name", "asset_class", "ticker"],
     as_index=False,
+    dropna=False,
 ).agg(
-    total_invested=("amount", "sum"),
+    total_invested=("net_invested", "sum"),
     total_shares=("shares", "sum"),
     number_of_trade_transactions=("amount", "count"),
     total_trade_value=("trade_value", "sum"),
@@ -49,18 +52,25 @@ allocation_by_asset["avg_buy_price"] = np.where(
     np.nan,
 )
 
-allocation_by_asset["total_invested"] = allocation_by_asset["total_invested"].abs()
+# The sector and country lookups skip a missing ticker only when it is None, not NaN.
+allocation_by_asset["ticker"] = allocation_by_asset["ticker"].astype(object)
+allocation_by_asset.loc[allocation_by_asset["ticker"].isna(), "ticker"] = None
 
 with st.spinner("Resolving sectors and countries..."):
     allocation_by_asset = add_sector_column(allocation_by_asset)
     allocation_by_asset = add_country_column(allocation_by_asset)
 
-sector_allocation = calculate_sector_allocation(allocation_by_asset)
-country_allocation = calculate_country_allocation(allocation_by_asset)
 sorted_allocation = allocation_by_asset.sort_values(by="total_invested", ascending=False)
 
+# An asset whose sales returned more than was put in has a negative net invested
+# amount. It still counts towards the total, but has no share of the charts.
+invested_assets = sorted_allocation.loc[sorted_allocation["total_invested"] > 0]
+returned_assets = sorted_allocation.loc[sorted_allocation["total_invested"] <= 0, "name"]
+sector_allocation = calculate_sector_allocation(invested_assets)
+country_allocation = calculate_country_allocation(invested_assets)
 
-def allocation_bar(data, value_column, label_column, value_title, height=350):
+
+def allocation_bar(data, value_column, label_column, value_title, key, height=350):
     """Sorted horizontal bar - the readable form for many close-valued shares."""
     figure = px.bar(
         data.sort_values(value_column, ascending=True),
@@ -70,23 +80,30 @@ def allocation_bar(data, value_column, label_column, value_title, height=350):
         labels={label_column: "", value_column: value_title},
     )
     figure.update_traces(marker_color=CATEGORICAL[0])
-    show_chart(figure, height=height)
+    show_chart(figure, height=height, key=key)
+
 
 col1, col2 = st.columns(2)
 
 with col1:
     with st.container(border=True):
         st.markdown("### Portfolio allocation")
-        st.caption("Invested capital per asset.")
-        allocation_bar(sorted_allocation, "total_invested", "name", "Invested (€)")
+        caption = "Net invested capital per asset, fees and taxes included."
+        if not returned_assets.empty:
+            caption += (
+                f" Not shown: {', '.join(returned_assets)}, "
+                "where sales returned more than was invested."
+            )
+        st.caption(caption)
+        allocation_bar(invested_assets, "total_invested", "name", "Invested (€)", "all_assets")
 
 with col2:
     with st.container(border=True):
         st.markdown("### Allocation by asset class")
         st.caption("A coarse split, so a donut still reads at a glance.")
 
-        asset_class = df.groupby("asset_class")["amount"].sum().abs().reset_index()
-        figure = px.pie(asset_class, names="asset_class", values="amount", hole=0.68)
+        asset_class = invested_assets.groupby("asset_class", as_index=False)["total_invested"].sum()
+        figure = px.pie(asset_class, names="asset_class", values="total_invested", hole=0.68)
         figure.update_traces(marker=dict(line=dict(color="#10151d", width=2)))
         show_chart(figure)
 
@@ -97,22 +114,22 @@ with col1:
         st.markdown("### Stock allocation")
         st.caption("Invested capital across your equity positions.")
 
-        stock_allocation = sorted_allocation[sorted_allocation["asset_class"] == "STOCK"]
+        stock_allocation = invested_assets[invested_assets["asset_class"] == "STOCK"]
         if stock_allocation.empty:
             st.info("No stock transactions found.")
         else:
-            allocation_bar(stock_allocation, "total_invested", "name", "Invested (€)")
+            allocation_bar(stock_allocation, "total_invested", "name", "Invested (€)", "stocks")
 
 with col2:
     with st.container(border=True):
         st.markdown("### Crypto allocation")
         st.caption("Invested capital across your crypto positions.")
 
-        crypto_allocation = sorted_allocation[sorted_allocation["asset_class"] == "CRYPTO"]
+        crypto_allocation = invested_assets[invested_assets["asset_class"] == "CRYPTO"]
         if crypto_allocation.empty:
             st.info("No crypto transactions found.")
         else:
-            allocation_bar(crypto_allocation, "total_invested", "name", "Invested (€)")
+            allocation_bar(crypto_allocation, "total_invested", "name", "Invested (€)", "crypto")
 
 columns = st.columns(2)
 
@@ -136,13 +153,16 @@ with columns[1]:
     with st.container(border=True):
         st.markdown("### Allocation by sector")
         st.caption("Sectors ranked by invested capital.")
-        allocation_bar(sector_allocation, "amount", "sector", "Invested (€)")
+        allocation_bar(sector_allocation, "amount", "sector", "Invested (€)", "sectors")
 
 col1, col2 = st.columns(2)
 with col1:
     with st.container(border=True):
         st.markdown("### Allocation by asset")
-        st.caption("Invested capital per asset, largest first.")
+        st.caption(
+            "Net invested capital per asset, largest first. "
+            "Negative means sales returned more than was invested."
+        )
 
         display_columns = [
             "name",
@@ -159,7 +179,7 @@ with col1:
             column_config={
                 "name": st.column_config.TextColumn("Asset"),
                 "total_invested": st.column_config.NumberColumn(
-                    "Total invested",
+                    "Net invested",
                     format="€%.2f",
                 ),
                 "total_shares": st.column_config.NumberColumn(
@@ -178,12 +198,11 @@ with col1:
 with col2:
     with st.container(border=True):
         st.markdown("### Allocation over time")
-        st.caption("Capital committed on each trading day.")
+        st.caption("Net capital invested (+) or taken out through sales (−) on each trading day.")
 
         allocation_over_time = trade_transactions.groupby("date", as_index=False).agg(
-            total_invested=("amount", "sum")
+            total_invested=("net_invested", "sum")
         )
-        allocation_over_time["total_invested"] = allocation_over_time["total_invested"].abs()
 
         figure = px.line(
             allocation_over_time,

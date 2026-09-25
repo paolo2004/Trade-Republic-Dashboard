@@ -81,10 +81,15 @@ def style_chart(fig, height=350):
     return fig
 
 
-def show_chart(fig, height=350):
-    """Render a chart with consistent sizing and no Plotly toolbar."""
+def show_chart(fig, height=350, key=None):
+    """Render a chart with consistent sizing and no Plotly toolbar.
+
+    Pass `key` when a page can render two charts from identical data;
+    Streamlit rejects such charts as duplicates otherwise.
+    """
     st.plotly_chart(
         style_chart(fig, height),
         width="stretch",
         config={"displayModeBar": False},
+        key=key,
     )
