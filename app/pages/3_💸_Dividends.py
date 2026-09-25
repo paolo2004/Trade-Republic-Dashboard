@@ -32,20 +32,6 @@ header_left, header_right = st.columns(
     vertical_alignment="bottom",
 )
 
-with header_left:
-    st.markdown(
-        """
-        <div class="header">
-            <h1>Dividend Income</h1>
-            <p>
-                Track dividend income, taxes,
-                payment activity and income sources.
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
 with header_right:
     st.caption("PERIOD")
     period = st.selectbox(

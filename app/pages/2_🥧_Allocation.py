@@ -14,19 +14,6 @@ from utils.styling import setup_page
 
 setup_page("Portfolio Allocation", "🥧")
 
-st.markdown(
-    """
-    <div class="header">
-        <h1>Portfolio Allocation</h1>
-        <p>
-            How your invested capital is distributed across
-            assets, asset classes, sectors and countries.
-        </p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
 check_if_data_loaded()
 df = st.session_state["df"].copy()
 validate_data(df)

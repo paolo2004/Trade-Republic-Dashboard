@@ -6,19 +6,6 @@ from utils.styling import setup_page
 
 setup_page("Expenses", "💳")
 
-st.markdown(
-    """
-    <div class="header">
-        <h1>Expenses</h1>
-        <p>
-            Understand card spending, fees and taxes
-            across your Trade Republic account.
-        </p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
 check_if_data_loaded()
 df = st.session_state["df"].copy()
 validate_data(df)

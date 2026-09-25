@@ -9,19 +9,6 @@ from utils.styling import setup_page
 
 setup_page("Transactions", "🔁")
 
-st.markdown(
-    """
-    <div class="header">
-        <h1>Transactions</h1>
-        <p>
-            Explore, filter and analyse your complete
-            Trade Republic transaction history.
-        </p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
 check_if_data_loaded()
 df = st.session_state["df"].copy()
 validate_data(df)

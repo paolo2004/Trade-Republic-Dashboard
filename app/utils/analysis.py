@@ -578,20 +578,8 @@ def render_stock_information(info, ticker_symbol, fallback_name):
 
 def render_asset_analysis_page():
     """Build the complete asset analysis page."""
-    st.markdown(
-            """
-            <div class="header">
-                <h1>Asset Analysis</h1>
-                <p>
-                    Get market information and financial metrics for assets in your portfolio.
-                </p>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
     portfolio_data = get_portfolio_data()
     assets = get_available_assets(portfolio_data)
-    st.markdown("---")
 
     ticker_symbol, fallback_name, asset_class = select_asset(assets)
     period = select_period()
