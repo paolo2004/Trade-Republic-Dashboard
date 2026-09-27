@@ -145,9 +145,7 @@ class TestGetTickerFromIsin:
         assert get_ticker_from_isin(isin) is None
         assert openfigi.calls == []
 
-    def test_returns_the_first_candidate_that_yahoo_finance_knows(
-        self, openfigi, monkeypatch
-    ):
+    def test_returns_the_first_candidate_that_yahoo_finance_knows(self, openfigi, monkeypatch):
         openfigi.response = FakeResponse(figi_payload(("SAP", "XET")))
         monkeypatch.setattr(
             ticker_lookup, "_validate_yahoo_ticker", lambda symbol: symbol == "SAP.DE"
@@ -165,9 +163,7 @@ class TestGetTickerFromIsin:
 
     def test_falls_back_to_the_unsuffixed_ticker(self, openfigi, monkeypatch):
         openfigi.response = FakeResponse(figi_payload(("SAP", "XET")))
-        monkeypatch.setattr(
-            ticker_lookup, "_validate_yahoo_ticker", lambda symbol: symbol == "SAP"
-        )
+        monkeypatch.setattr(ticker_lookup, "_validate_yahoo_ticker", lambda symbol: symbol == "SAP")
 
         assert get_ticker_from_isin("DE0007164600") == "SAP"
 
@@ -189,9 +185,7 @@ class TestGetTickerFromIsin:
 
         get_ticker_from_isin(" de0007164600 ")
 
-        assert openfigi.calls[0]["json"] == [
-            {"idType": "ID_ISIN", "idValue": "DE0007164600"}
-        ]
+        assert openfigi.calls[0]["json"] == [{"idType": "ID_ISIN", "idValue": "DE0007164600"}]
         assert openfigi.calls[0]["timeout"] == 15
 
     @pytest.mark.parametrize(

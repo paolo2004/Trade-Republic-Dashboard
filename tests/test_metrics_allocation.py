@@ -165,9 +165,7 @@ class TestCountryLookup:
         assert get_country_for_ticker("XYZ", asset_class) == "Global"
 
     def test_stocks_use_the_country_from_yahoo_finance(self, monkeypatch):
-        monkeypatch.setattr(
-            metrics, "load_ticker_info", lambda ticker: {"country": "Germany"}
-        )
+        monkeypatch.setattr(metrics, "load_ticker_info", lambda ticker: {"country": "Germany"})
 
         assert get_country_for_ticker("SAP.DE", "STOCK") == "Germany"
 
@@ -185,9 +183,7 @@ class TestCountryLookup:
         assert get_country_for_ticker("", "STOCK") == "Unknown"
 
     def test_adds_a_country_column_per_row(self, monkeypatch):
-        monkeypatch.setattr(
-            metrics, "load_ticker_info", lambda ticker: {"country": "Germany"}
-        )
+        monkeypatch.setattr(metrics, "load_ticker_info", lambda ticker: {"country": "Germany"})
         frame = allocation_frame(
             [
                 {"name": "A", "ticker": "AAA", "asset_class": "STOCK"},

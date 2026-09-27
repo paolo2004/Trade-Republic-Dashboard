@@ -19,9 +19,7 @@ def only_position(rows):
 
 class TestSingleBuy:
     def test_cost_basis_includes_fees_and_taxes(self):
-        position = only_position(
-            [trade(shares=10, amount=-1000.0, fee=-1.0, tax=-0.5)]
-        )
+        position = only_position([trade(shares=10, amount=-1000.0, fee=-1.0, tax=-0.5)])
 
         assert position["open_shares"] == 10
         assert position["open_cost_basis"] == pytest.approx(1001.5)
@@ -159,9 +157,7 @@ class TestClosedPosition:
 class TestOrderingAndGrouping:
     def test_trades_are_processed_in_date_order_not_row_order(self):
         rows = [
-            trade(
-                date="2024-02-01", type="SELL", shares=4, amount=500.0, fee=-1.0, tax=-2.0
-            ),
+            trade(date="2024-02-01", type="SELL", shares=4, amount=500.0, fee=-1.0, tax=-2.0),
             trade(date="2024-01-01", shares=10, amount=-1000.0),
         ]
         out_of_order = calculate_positions(trades_frame(rows)).iloc[0]

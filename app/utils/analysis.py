@@ -52,7 +52,7 @@ def format_percentage(value):
         if abs(value) <= 1:
             return f"{float(value) * 100:.2f}%"
         else:
-            return f"{float(value) :.2f}%"
+            return f"{float(value):.2f}%"
     except (ValueError, TypeError):
         return "N/A"
 
@@ -67,7 +67,6 @@ def get_portfolio_data():
 
 
 def get_available_assets(portfolio_data):
-
     assets = (
         portfolio_data[["name", "symbol", "ticker", "asset_class"]]
         .dropna(subset=["name", "ticker"])
@@ -139,7 +138,7 @@ def load_price_history(ticker_symbol, period):
 
 def get_display_name(info, asset_class):
     """Return the best available display name."""
-    if (asset_class == "CRYPTO"):
+    if asset_class == "CRYPTO":
         name = info.get("name")
     else:
         name = info.get("longName")
@@ -278,6 +277,7 @@ def render_financial_statements(ticker_symbol):
         return
     st.dataframe(statement, width="stretch")
 
+
 def render_crypto_information(info, currency):
     """Render cryptocurrency-specific information."""
 
@@ -293,72 +293,34 @@ def render_crypto_information(info, currency):
     st.subheader("Supply & Market Data")
     left_column, right_column = st.columns(2)
     with left_column:
-        st.metric(
-            "Market Capitalization",
-            format_large_number(info.get("marketCap"))
-        )
-        st.metric(
-            "Fully Diluted Value",
-            format_large_number(info.get("fullyDilutedValue"))
-        )
-        st.metric(
-            "24h Trading Volume",
-            format_large_number(info.get("volume24Hr"))
-        )
+        st.metric("Market Capitalization", format_large_number(info.get("marketCap")))
+        st.metric("Fully Diluted Value", format_large_number(info.get("fullyDilutedValue")))
+        st.metric("24h Trading Volume", format_large_number(info.get("volume24Hr")))
 
     with right_column:
-        st.metric(
-            "Circulating Supply",
-            format_large_number(circulating_supply)
-        )
+        st.metric("Circulating Supply", format_large_number(circulating_supply))
 
-        st.metric(
-            "Total Supply",
-            format_large_number(total_supply)
-        )
+        st.metric("Total Supply", format_large_number(total_supply))
 
-        st.metric(
-            "Maximum Supply",
-            format_large_number(max_supply)
-        )
+        st.metric("Maximum Supply", format_large_number(max_supply))
 
     render_metric_group(
         "Historical Price Levels",
         {
-            "All-Time High": format_price(
-                info.get("allTimeHigh"),
-                currency
-            ),
-            "All-Time Low": format_price(
-                info.get("allTimeLow"),
-                currency
-            ),
-            "50-Day Average": format_price(
-                info.get("fiftyDayAverage"),
-                currency
-            ),
-            "200-Day Average": format_price(
-                info.get("twoHundredDayAverage"),
-                currency
-            ),
+            "All-Time High": format_price(info.get("allTimeHigh"), currency),
+            "All-Time Low": format_price(info.get("allTimeLow"), currency),
+            "50-Day Average": format_price(info.get("fiftyDayAverage"), currency),
+            "200-Day Average": format_price(info.get("twoHundredDayAverage"), currency),
         },
     )
 
     render_metric_group(
         "Market Performance",
         {
-            "52-Week Change": format_percentage(
-                info.get("fiftyTwoWeekChangePercent")
-            ),
-            "From 52-Week High": format_percentage(
-                info.get("fiftyTwoWeekHighChangePercent")
-            ),
-            "From 52-Week Low": format_percentage(
-                info.get("fiftyTwoWeekLowChangePercent")
-            ),
-            "Volume / Market Cap": format_percentage(
-                info.get("volume24HrMarketCapPercent")
-            ),
+            "52-Week Change": format_percentage(info.get("fiftyTwoWeekChangePercent")),
+            "From 52-Week High": format_percentage(info.get("fiftyTwoWeekHighChangePercent")),
+            "From 52-Week Low": format_percentage(info.get("fiftyTwoWeekLowChangePercent")),
+            "Volume / Market Cap": format_percentage(info.get("volume24HrMarketCapPercent")),
         },
     )
 
@@ -376,63 +338,35 @@ def render_crypto_information(info, currency):
 
     with columns[0]:
         if website:
-            st.link_button(
-                "🌐 Website",
-                website
-            )
+            st.link_button("🌐 Website", website)
 
     with columns[1]:
         if whitepaper:
-            st.link_button(
-                "📄 Whitepaper",
-                whitepaper
-            )
+            st.link_button("📄 Whitepaper", whitepaper)
 
     with columns[2]:
         if coinmarketcap:
-            st.link_button(
-                "📊 CoinMarketCap",
-                coinmarketcap
-            )
+            st.link_button("📊 CoinMarketCap", coinmarketcap)
+
 
 def render_fund_information(info, currency):
     """Render fund/ETF-specific information."""
-    fund_inception_date = format_date_value(
-        info.get("fundInceptionDate")
-    )
+    fund_inception_date = format_date_value(info.get("fundInceptionDate"))
 
     left_column, right_column = st.columns(2)
     st.subheader("Fund Overview")
     with left_column:
-        st.metric(
-            "Fund Type",
-            info.get("legalType", "N/A")
-        )
+        st.metric("Fund Type", info.get("legalType", "N/A"))
 
-        st.metric(
-            "Fund Family",
-            info.get("fundFamily", "N/A")
-        )
+        st.metric("Fund Family", info.get("fundFamily", "N/A"))
 
-        st.metric(
-            "Inception Date",
-            fund_inception_date
-        )
+        st.metric("Inception Date", fund_inception_date)
     with right_column:
-        st.metric(
-            "Exchange",
-            info.get("fullExchangeName", "N/A")
-        )
+        st.metric("Exchange", info.get("fullExchangeName", "N/A"))
 
-        st.metric(
-            "Currency",
-            info.get("currency", currency)
-        )
+        st.metric("Currency", info.get("currency", currency))
 
-        st.metric(
-            "Ticker",
-            info.get("symbol", "N/A")
-        )
+        st.metric("Ticker", info.get("symbol", "N/A"))
 
     st.subheader("Fund Costs & Valuation")
     left_column, right_column = st.columns(2)
@@ -440,29 +374,11 @@ def render_fund_information(info, currency):
         expense_ratio = info.get("netExpenseRatio")
         if expense_ratio is not None:
             expense_ratio = expense_ratio / 100
-        st.metric(
-            "Net Expense Ratio",
-            format_percentage(expense_ratio)
-        )
-        st.metric(
-            "P/E Ratio",
-            format_number(info.get("trailingPE"))
-        )
+        st.metric("Net Expense Ratio", format_percentage(expense_ratio))
+        st.metric("P/E Ratio", format_number(info.get("trailingPE")))
     with right_column:
-        st.metric(
-            "50-Day Average",
-            format_price(
-                info.get("fiftyDayAverage"),
-                currency
-            )
-        )
-        st.metric(
-            "200-Day Average",
-            format_price(
-                info.get("twoHundredDayAverage"),
-                currency
-            )
-        )
+        st.metric("50-Day Average", format_price(info.get("fiftyDayAverage"), currency))
+        st.metric("200-Day Average", format_price(info.get("twoHundredDayAverage"), currency))
 
     st.subheader("Fund Performance")
     left_column, right_column = st.columns(2)
@@ -473,60 +389,22 @@ def render_fund_information(info, currency):
                 info.get("fiftyTwoWeekChangePercent") / 100
                 if info.get("fiftyTwoWeekChangePercent") is not None
                 else None
-            )
+            ),
         )
-        st.metric(
-            "From 52-Week High",
-            format_percentage(
-                info.get("fiftyTwoWeekHighChangePercent")
-            )
-        )
+        st.metric("From 52-Week High", format_percentage(info.get("fiftyTwoWeekHighChangePercent")))
     with right_column:
-        st.metric(
-            "From 52-Week Low",
-            format_percentage(
-                info.get("fiftyTwoWeekLowChangePercent")
-            )
-        )
-        st.metric(
-            "All-Time High",
-            format_price(
-                info.get("allTimeHigh"),
-                currency
-            )
-        )
+        st.metric("From 52-Week Low", format_percentage(info.get("fiftyTwoWeekLowChangePercent")))
+        st.metric("All-Time High", format_price(info.get("allTimeHigh"), currency))
 
     st.subheader("Trading Information")
     left_column, right_column = st.columns(2)
     with left_column:
-        st.metric(
-            "Latest Volume",
-            format_large_number(
-                info.get("regularMarketVolume")
-            )
-        )
-        st.metric(
-            "Average Volume",
-            format_large_number(
-                info.get("averageVolume")
-            )
-
-        )
+        st.metric("Latest Volume", format_large_number(info.get("regularMarketVolume")))
+        st.metric("Average Volume", format_large_number(info.get("averageVolume")))
     with right_column:
-        st.metric(
-            "Bid",
-            format_price(
-                info.get("bid"),
-                currency
-            )
-        )
-        st.metric(
-            "Ask",
-            format_price(
-                info.get("ask"),
-                currency
-            )
-        )
+        st.metric("Bid", format_price(info.get("bid"), currency))
+        st.metric("Ask", format_price(info.get("ask"), currency))
+
 
 def render_stock_information(info, ticker_symbol, fallback_name):
     """Render stock-specific information."""
@@ -574,7 +452,7 @@ def render_stock_information(info, ticker_symbol, fallback_name):
         st.write(info["longBusinessSummary"])
     st.markdown("---")
     render_financial_statements(ticker_symbol)
-    
+
 
 def render_asset_analysis_page():
     """Build the complete asset analysis page."""

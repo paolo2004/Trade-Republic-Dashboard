@@ -1,4 +1,5 @@
 from pathlib import Path
+
 import streamlit as st
 from utils.chart import register_chart_theme
 

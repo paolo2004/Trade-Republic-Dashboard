@@ -216,9 +216,7 @@ class TestCalculatePriceMetrics:
         assert metrics["price_change_percent"] == 0.0
 
     def test_empty_history_falls_back_to_the_info_price(self):
-        metrics = calculate_price_metrics(
-            pd.DataFrame(), pd.DataFrame(), {"currentPrice": 42.0}
-        )
+        metrics = calculate_price_metrics(pd.DataFrame(), pd.DataFrame(), {"currentPrice": 42.0})
 
         assert metrics["latest_price"] == 42.0
         assert metrics["high_52_week"] is None

@@ -122,8 +122,10 @@ class TestLoadDataNormalisation:
     )
     def test_personal_columns_are_dropped(self, column, no_isin_lookup):
         text = (
-            CSV_HEADER.rstrip("\n") + ",account_type,mcc_code\n"
-            + CSV_ROW.rstrip("\n") + ",private,1234\n"
+            CSV_HEADER.rstrip("\n")
+            + ",account_type,mcc_code\n"
+            + CSV_ROW.rstrip("\n")
+            + ",private,1234\n"
         )
         frame = load_data(csv_upload(text))
 

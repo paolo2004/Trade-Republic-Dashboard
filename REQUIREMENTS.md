@@ -25,7 +25,6 @@ Dieses Projekt bietet ein lokales Dashboard zur Analyse von Trade Republic Expor
 
 - Keine Login-Automatisierung fuer Trade Republic.
 - Kein Zugriff auf inoffizielle Trade Republic APIs.
-- Keine Nutzung von externen Wechselkursdaten fuer Waehrungsumrechnung.
 - Kein Tracking oder Monitoring ausserhalb der Kernfunktionalitaet.
 - Keine fancy Visualisierungen, die nicht direkt mit der Datenanalyse zusammenhaengen.
 

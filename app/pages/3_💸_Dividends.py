@@ -1,4 +1,3 @@
-
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -51,8 +50,7 @@ with header_right:
             st.stop()
         start_date, end_date = selected_dates
         filtered_dividends = dividends[
-            (dividends["date"].dt.date >= start_date)
-            & (dividends["date"].dt.date <= end_date)
+            (dividends["date"].dt.date >= start_date) & (dividends["date"].dt.date <= end_date)
         ].copy()
 
 if period == "Current year":
@@ -126,15 +124,12 @@ with left_column:
     with st.container(border=True):
         st.markdown("### Monthly net income")
 
-        st.caption(
-            "Net dividend income received each month "
-            "after taxes."
-        )
+        st.caption("Net dividend income received each month after taxes.")
         monthly_net_chart = px.bar(
             monthly_income,
             x="month",
             y="net_dividends",
-            labels= {"month": "Month", "net_dividends": "Net dividends (€)"},
+            labels={"month": "Month", "net_dividends": "Net dividends (€)"},
             color_discrete_sequence=[CATEGORICAL[2]],
         )
         monthly_net_chart.update_layout(
@@ -150,10 +145,7 @@ with left_column:
 with right_column:
     with st.container(border=True):
         st.markdown("### Gross dividends vs taxes")
-        st.caption(
-            "Compare gross dividend income with taxes "
-            "paid each month."
-        )
+        st.caption("Compare gross dividend income with taxes paid each month.")
 
         monthly_gross_tax_chart = px.bar(
             monthly_income,
@@ -188,23 +180,19 @@ asset_summary = (
     )
     .sort_values("net_dividends", ascending=False)
 )
-asset_summary["average_payment"] = (
-    asset_summary["net_dividends"] / asset_summary["payments"]
-)
+asset_summary["average_payment"] = asset_summary["net_dividends"] / asset_summary["payments"]
 
 st.markdown(
     '<div class="section-label">INCOME SOURCES</div>',
     unsafe_allow_html=True,
 )
 
-left_column, right_column = st.columns([1.25,1])
+left_column, right_column = st.columns([1.25, 1])
 
 with left_column:
     with st.container(border=True):
         st.markdown("### Top dividend-paying assets")
-        st.caption(
-            "Assets contributing the most net dividend income."
-        )
+        st.caption("Assets contributing the most net dividend income.")
         top_assets = asset_summary.head(5).sort_values("net_dividends")
 
         top_assets_chart = px.bar(
@@ -215,15 +203,16 @@ with left_column:
             labels={"net_dividends": "Net dividends (€)", "name": "Asset"},
             color_discrete_sequence=[CATEGORICAL[2]],
         )
-        top_assets_chart.update_xaxes(tickprefix="€", tickformat=",.0f",)
+        top_assets_chart.update_xaxes(
+            tickprefix="€",
+            tickformat=",.0f",
+        )
         show_chart(top_assets_chart, height=320)
 
 with right_column:
     with st.container(border=True):
         st.markdown("### Income distribution")
-        st.caption(
-            "Share of total net dividend income by asset."
-        )
+        st.caption("Share of total net dividend income by asset.")
 
         # A donut stays readable to about six segments, so keep the five
         # largest payers and fold the rest into a single "Other" slice.
@@ -253,10 +242,7 @@ with right_column:
             showlegend=False,
         )
         distribution_chart.add_annotation(
-            text=(
-                f"<b>€{total_net:,.2f}</b>"
-                "<br><span style='font-size:11px'>Net income</span>"
-            ),
+            text=(f"<b>€{total_net:,.2f}</b><br><span style='font-size:11px'>Net income</span>"),
             x=0.5,
             y=0.5,
             showarrow=False,
@@ -264,7 +250,7 @@ with right_column:
                 size=15,
                 color="#e6eaf0",
             ),
-    )
+        )
         show_chart(distribution_chart, height=320)
 
 

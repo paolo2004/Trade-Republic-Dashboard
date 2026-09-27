@@ -13,6 +13,7 @@ def get_trades_transactions(df):
     else:
         return buy_transactions
 
+
 @st.cache_data(ttl=900, show_spinner=False)
 def get_usd_eur_rate():
     try:
@@ -20,7 +21,7 @@ def get_usd_eur_rate():
         rate = ticker.fast_info.get("last_price")
 
         if rate is None or pd.isna(rate):
-            history = ticker.history(period="5d",interval="15m",auto_adjust=False)
+            history = ticker.history(period="5d", interval="15m", auto_adjust=False)
 
             if not history.empty:
                 rate = history["Close"].dropna().iloc[-1]
@@ -32,12 +33,14 @@ def get_usd_eur_rate():
 
     except Exception:
         return np.nan
-    
+
+
 def convert_usd_to_eur(price_usd, exchange_rate):
     if price_usd is None:
         return None
 
     return float(price_usd) * float(exchange_rate)
+
 
 @st.cache_data(ttl=900, show_spinner=False)
 def get_current_prices(tickers):
@@ -51,11 +54,11 @@ def get_current_prices(tickers):
 
         try:
             yahoo_ticker = yf.Ticker(ticker)
-            history = yahoo_ticker.history(period="5d",interval="15m", auto_adjust=False)
+            history = yahoo_ticker.history(period="5d", interval="15m", auto_adjust=False)
             if not history.empty:
                 price = history["Close"].dropna().iloc[-1]
 
-            currency =  yahoo_ticker.fast_info.get("currency")
+            currency = yahoo_ticker.fast_info.get("currency")
             if currency == "USD":
                 price_eur = convert_usd_to_eur(price, exchange_rate)
             elif currency == "EUR":
@@ -66,6 +69,7 @@ def get_current_prices(tickers):
             prices[ticker] = np.nan
 
     return prices
+
 
 def calculate_positions(trades):
     """
@@ -122,18 +126,14 @@ def calculate_positions(trades):
                 open_cost_basis -= removed_cost_basis
                 realised_profit_loss += net_sale_proceeds - removed_cost_basis
 
-          # Avoid tiny floating-point leftovers
+        # Avoid tiny floating-point leftovers
         if abs(open_shares) < 1e-10:
             open_shares = 0.0
 
         if abs(open_cost_basis) < 1e-10:
             open_cost_basis = 0.0
 
-        avg_cost_per_share = (
-            open_cost_basis / open_shares
-            if open_shares > 0
-            else np.nan
-        )
+        avg_cost_per_share = open_cost_basis / open_shares if open_shares > 0 else np.nan
         positions.append(
             {
                 "name": name,
@@ -151,6 +151,7 @@ def calculate_positions(trades):
 
     return pd.DataFrame(positions)
 
+
 def get_sector_for_ticker(ticker_symbol, asset_class):
     """Return the sector of an asset from Yahoo Finance."""
     if not ticker_symbol:
@@ -162,6 +163,7 @@ def get_sector_for_ticker(ticker_symbol, asset_class):
         sector = str(asset_class).strip().upper() or "Unknown"
 
     return sector
+
 
 def add_sector_column(allocation_data):
     """Add a sector column based on each asset's Yahoo Finance ticker."""
@@ -175,17 +177,19 @@ def add_sector_column(allocation_data):
     )
     return allocation_data
 
+
 def get_country_for_ticker(ticker_symbol, asset_class):
     """Return the country of an asset from Yahoo Finance."""
     if not ticker_symbol:
         return "Unknown"
     if asset_class in ["ETF", "ETC", "ETN", "FUND"] or asset_class == "CRYPTO":
         return "Global"
-    
+
     info = load_ticker_info(ticker_symbol)
     country = info.get("country", "Unknown")
 
     return country
+
 
 def add_country_column(allocation_data):
     """Add a country column based on each asset's Yahoo Finance ticker."""
@@ -211,12 +215,12 @@ def calculate_sector_allocation(allocation_data):
     total_amount = sector_allocation["amount"].sum()
 
     sector_allocation["percentage"] = (
-        sector_allocation["amount"] / total_amount * 100
-        if total_amount > 0
-        else 0
+        sector_allocation["amount"] / total_amount * 100 if total_amount > 0 else 0
     )
 
     return sector_allocation
+
+
 def calculate_country_allocation(allocation_data):
     """Calculate total invested amount and percentage per country."""
     country_allocation = (
@@ -231,9 +235,7 @@ def calculate_country_allocation(allocation_data):
     total_amount = country_allocation["amount"].sum()
 
     country_allocation["percentage"] = (
-        country_allocation["amount"] / total_amount * 100
-        if total_amount > 0
-        else 0
+        country_allocation["amount"] / total_amount * 100 if total_amount > 0 else 0
     )
 
     return country_allocation
