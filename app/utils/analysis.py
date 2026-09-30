@@ -81,7 +81,6 @@ def get_available_assets(portfolio_data):
 
 
 def select_asset(assets):
-    """Render asset controls and return ticker, name, and asset class."""
     st.sidebar.header("Asset Lookup")
     selected_asset = st.sidebar.selectbox(
         "Select an asset from your portfolio", options=assets["name"].tolist()
